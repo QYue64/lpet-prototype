@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>毛孩子邻里·帮手端 - 微信小程序原型</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #5C8DDC;
+      --primary-light: #7BA4E8;
+      --primary-dark: #3D6DC4;
+      --primary-bg: rgba(92, 141, 220, 0.08);
+      --accent: #F4A261;
+      --accent-light: #F7C59F;
+      --accent-bg: rgba(244, 162, 97, 0.1);
+      --danger: #E57373;
+      --danger-bg: rgba(229, 115, 115, 0.1);
+      --warning: #FFB74D;
+      --warning-bg: rgba(255, 183, 77, 0.1);
+      --success: #81C784;
+      --success-bg: rgba(129, 199, 132, 0.1);
+      --info: #64B5F6;
+      --info-bg: rgba(100, 181, 246, 0.1);
+      --purple: #BA68C8;
+      --purple-bg: rgba(186, 104, 200, 0.1);
+      --gold: #FFD700;
+      --gold-bg: rgba(255, 215, 0, 0.1);
+      --bg: #F4F8FF;
+      --bg-card: #FFFFFF;
+      --bg-secondary: #EEF3FB;
+      --text: #2D3748;
+      --text-light: #718096;
+      --text-muted: #A0AEC0;
+      --border: #DDE6F0;
+      --shadow: rgba(92, 141, 220, 0.08);
+      --shadow-lg: rgba(92, 141, 220, 0.15);
+      --radius: 20px;
+      --radius-sm: 12px;
+      --radius-xs: 8px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Noto Sans SC', 'Quicksand', -apple-system, sans-serif;
+      background: #1a1a1a;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px 0;
+    }
+
+    .phone-frame {
+      width: 375px;
+      height: 812px;
+      background: var(--bg);
+      border-radius: 40px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.4);
+    }
+
+    /* Status Bar */
+    .status-bar {
+      height: 44px;
+      background: var(--bg);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 0 24px 8px;
+      position: relative;
+      z-index: 100;
+    }
+    .status-time { position: absolute; left: 24px; bottom: 10px; font-size: 14px; font-weight: 600; }
+    .status-icons { position: absolute; right: 24px; bottom: 8px; display: flex; gap: 5px; align-items: center; }
+
+    /* Pages */
+    .pages-container { height: calc(100% - 44px - 84px); overflow: hidden; position: relative; }
+
+    .page {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--bg);
+      overflow-y: auto;
+      overflow-x: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+      transform: translateX(30px);
+      -webkit-overflow-scrolling: touch;
+    }
+    .page.active { opacity: 1; pointer-events: auto; transform: translateX(0); }
+    .page::-webkit-scrollbar { display: none; }
+
+    /* Tab Bar */
+    .tab-bar {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: calc(84px + var(--safe-bottom));
+      padding-bottom: var(--safe-bottom);
+      background: var(--bg-card);
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+      padding-top: 8px;
+      box-shadow: 0 -4px 24px var(--shadow);
+      z-index: 100;
+      border-radius: 24px 24px 0 0;
+    }
+    .tab-item {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 4px 16px; cursor: pointer; transition: all 0.2s;
+    }
+    .tab-item svg { width: 24px; height: 24px; color: var(--text-muted); transition: all 0.2s; }
+    .tab-item span { font-size: 10px; font-weight: 500; color: var(--text-muted); }
+    .tab-item.active svg { color: var(--primary); }
+    .tab-item.active span { color: var(--primary); font-weight: 600; }
+
+    /* Common */
+    .card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: 0 2px 16px var(--shadow);
+      margin-bottom: 14px;
+    }
+    .avatar {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-light), var(--accent));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; color: white; font-weight: 600; flex-shrink: 0;
+    }
+    .avatar.lg { width: 60px; height: 60px; font-size: 24px; }
+    .avatar.xl { width: 80px; height: 80px; font-size: 32px; }
+
+    .tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 500;
+    }
+    .tag-primary { background: var(--primary-bg); color: var(--primary-dark); }
+    .tag-accent { background: var(--accent-bg); color: #D4824A; }
+    .tag-success { background: var(--success-bg); color: #388E3C; }
+    .tag-warning { background: var(--warning-bg); color: #E65100; }
+    .tag-danger { background: var(--danger-bg); color: #C62828; }
+    .tag-info { background: var(--info-bg); color: #1976D2; }
+    .tag-purple { background: var(--purple-bg); color: #7B1FA2; }
+    .tag-gold { background: var(--gold-bg); color: #B8860B; }
+
+    .rating { display: flex; align-items: center; gap: 2px; }
+    .rating svg { width: 14px; height: 14px; color: var(--accent); fill: var(--accent); }
+    .rating-value { font-size: 13px; font-weight: 600; margin-left: 4px; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 12px 24px; border-radius: 24px;
+      font-size: 14px; font-weight: 600; border: none; cursor: pointer;
+      transition: all 0.2s ease; font-family: inherit;
+    }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; box-shadow: 0 4px 16px rgba(92,141,220,0.3); }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-secondary { background: var(--bg-secondary); color: var(--text); }
+    .btn-secondary:active { transform: scale(0.97); }
+    .btn-outline { background: transparent; border: 1.5px solid var(--primary); color: var(--primary); }
+    .btn-accent { background: linear-gradient(135deg, var(--accent), #E8895A); color: white; box-shadow: 0 4px 16px rgba(244,162,97,0.3); }
+    .btn-accent:active { transform: scale(0.97); }
+    .btn-danger { background: linear-gradient(135deg, var(--danger), #EF5350); color: white; }
+    .btn-block { width: 100%; }
+    .btn-sm { padding: 8px 16px; font-size: 12px; border-radius: 20px; }
+    .btn-lg { padding: 16px 32px; font-size: 16px; border-radius: 28px; }
+
+    /* Animations */
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+    @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+    @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+    @keyframes glow { 0%, 100% { box-shadow: 0 0 8px rgba(92,141,220,0.3); } 50% { box-shadow: 0 0 20px rgba(92,141,220,0.6); } }
+
+    .animate-in { animation: fadeInUp 0.4s ease forwards; }
+    .delay-1 { animation-delay: 0.05s; opacity: 0; }
+    .delay-2 { animation-delay: 0.1s; opacity: 0; }
+    .delay-3 { animation-delay: 0.15s; opacity: 0; }
+    .delay-4 { animation-delay: 0.2s; opacity: 0; }
+    .delay-5 { animation-delay: 0.25s; opacity: 0; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 80px; left: 50%; transform: translateX(-50%) translateY(-20px);
+      background: rgba(45, 52, 54, 0.95);
+      color: white; padding: 14px 28px; border-radius: 28px;
+      font-size: 14px; font-weight: 500;
+      opacity: 0; pointer-events: none; transition: all 0.3s ease;
+      z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      max-width: 320px; text-align: center;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.success { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); }
+    .toast.error { background: linear-gradient(135deg, var(--danger), #EF5350); }
+    .toast.warning { background: linear-gradient(135deg, var(--warning), #FFA000); }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 9000; display: flex; align-items: flex-end;
+      justify-content: center; opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .modal-overlay.show { opacity: 1; pointer-events: auto; }
+    .modal {
+      background: var(--bg-card);
+      border-radius: 28px 28px 0 0;
+      width: 375px;
+      max-height: 85vh;
+      overflow: hidden;
+      transform: translateY(100%);
+      transition: transform 0.35s ease;
+    }
+    .modal-overlay.show .modal { transform: translateY(0); }
+    .modal-header {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-title { font-size: 17px; font-weight: 700; color: var(--text); }
+    .modal-close { width: 32px; height: 32px; border-radius: 50%; background: var(--bg-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; color: var(--text-light); }
+    .modal-body { padding: 20px; overflow-y: auto; max-height: calc(85vh - 60px); }
+    .modal-footer { padding: 16px 20px; padding-bottom: calc(16px + var(--safe-bottom)); border-top: 1px solid var(--border); }
+
+    /* Notification Badge */
+    .notif-badge {
+      min-width: 16px; height: 16px; background: var(--danger);
+      border-radius: 8px; font-size: 10px; font-weight: 700;
+      color: white; display: flex; align-items: center; justify-content: center;
+      position: absolute; top: -2px; right: -2px; padding: 0 4px;
+    }
+
+    /* ===== HOME PAGE ===== */
+    .helper-home-header {
+      padding: 16px 20px 12px;
+      background: linear-gradient(180deg, var(--bg) 0%, transparent 100%);
+    }
+    .helper-greeting {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+    }
+    .helper-avatar-wrap { position: relative; }
+    .helper-avatar-wrap .avatar { width: 52px; height: 52px; }
+    .online-dot {
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--success); border: 2.5px solid var(--bg-card);
+      position: absolute; bottom: 0; right: 0;
+    }
+    .helper-info h2 { font-size: 18px; font-weight: 700; color: var(--text); }
+    .helper-info p { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+    .helper-level-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 8px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--gold-bg), rgba(255,215,0,0.2));
+      border: 1px solid rgba(255,215,0,0.4);
+      font-size: 11px; font-weight: 600; color: #B8860B;
+    }
+
+    /* Today Stats */
+    .today-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 10px; padding: 0 20px; margin-bottom: 16px;
+    }
+    .today-stat {
+      background: var(--bg-card);
+      border-radius: var(--radius-sm);
+      padding: 14px 10px; text-align: center;
+      box-shadow: 0 2px 12px var(--shadow);
+    }
+    .today-stat-value { font-size: 22px; font-weight: 700; color: var(--primary); font-family: 'Quicksand', sans-serif; }
+    .today-stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .today-stat-value.accent { color: var(--accent); }
+    .today-stat-value.gold { color: var(--gold); }
+
+    /* Task Section */
+    .section-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0 20px; margin-bottom: 12px;
+    }
+    .section-title { font-size: 15px; font-weight: 700; color: var(--text); }
+    .section-link { font-size: 12px; color: var(--primary); font-weight: 500; cursor: pointer; }
+
+    /* Task Card */
+    .task-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      margin: 0 16px 12px;
+      padding: 16px;
+      box-shadow: 0 2px 16px var(--shadow);
+      border-left: 4px solid var(--primary);
+      position: relative;
+      overflow: hidden;
+    }
+    .task-card.urgent { border-left-color: var(--danger); }
+    .task-card.platform { border-left-color: var(--accent); background: linear-gradient(135deg, var(--bg-card) 90%, rgba(244,162,97,0.05)); }
+    .task-card-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    .task-pet-info { display: flex; align-items: center; gap: 10px; }
+    .task-pet-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--primary-bg); display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    .task-card.urgent .task-pet-icon { background: var(--danger-bg); }
+    .task-pet-name { font-size: 15px; font-weight: 600; color: var(--text); }
+    .task-pet-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .task-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .task-tag { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+    .task-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+    .task-info-item { display: flex; flex-direction: column; gap: 2px; }
+    .task-info-label { font-size: 10px; color: var(--text-muted); }
+    .task-info-value { font-size: 13px; font-weight: 600; color: var(--text); }
+    .task-price { font-size: 20px; font-weight: 700; color: var(--primary); font-family: 'Quicksand', sans-serif; }
+    .task-price span { font-size: 12px; font-weight: 400; color: var(--text-muted); }
+    .task-actions { display: flex; gap: 10px; }
+    .task-actions .btn { flex: 1; }
+
+    /* Platform Task Banner */
+    .platform-banner {
+      background: linear-gradient(135deg, var(--accent), #E8895A);
+      border-radius: var(--radius);
+      margin: 0 16px 12px;
+      padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .platform-banner-icon { font-size: 28px; }
+    .platform-banner-text { flex: 1; }
+    .platform-banner-text h4 { color: white; font-size: 14px; font-weight: 600; }
+    .platform-banner-text p { color: rgba(255,255,255,0.8); font-size: 12px; margin-top: 2px; }
+    .platform-banner .btn { background: white; color: var(--accent); font-size: 12px; padding: 8px 14px; flex-shrink: 0; }
+
+    /* Order Pool */
+    .pool-countdown {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: var(--radius);
+      margin: 0 16px 12px;
+      padding: 12px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      color: white;
+    }
+    .pool-countdown-text { font-size: 13px; font-weight: 500; opacity: 0.9; }
+    .pool-countdown-time { font-size: 20px; font-weight: 700; font-family: 'Quicksand', sans-serif; }
+    .pool-countdown-label { font-size: 10px; opacity: 0.7; text-align: right; }
+
+    /* ===== ORDERS PAGE ===== */
+    .orders-tabs {
+      display: flex; gap: 6px; padding: 0 20px 14px;
+    }
+    .orders-tab {
+      flex: 1; padding: 10px; text-align: center;
+      border-radius: var(--radius-sm);
+      font-size: 13px; font-weight: 500;
+      background: var(--bg-card);
+      color: var(--text-light);
+      cursor: pointer; transition: all 0.2s;
+      border: 1.5px solid transparent;
+    }
+    .orders-tab.active { background: var(--primary-bg); color: var(--primary); border-color: var(--primary); font-weight: 600; }
+
+    .order-item {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      margin: 0 16px 12px;
+      padding: 16px;
+      box-shadow: 0 2px 16px var(--shadow);
+    }
+    .order-item-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px;
+    }
+    .order-item-service { display: flex; align-items: center; gap: 10px; }
+    .order-item-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--primary-bg); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .order-item-name { font-size: 14px; font-weight: 600; color: var(--text); }
+    .order-item-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .order-item-status {
+      padding: 4px 10px; border-radius: 12px;
+      font-size: 11px; font-weight: 600;
+    }
+    .order-item-status.ongoing { background: var(--info-bg); color: var(--info); }
+    .order-item-status.completed { background: var(--success-bg); color: #388E3C; }
+    .order-item-status.cancelled { background: var(--bg-secondary); color: var(--text-muted); }
+    .order-item-divider { height: 1px; background: var(--border); margin: 12px 0; }
+    .order-item-details { display: flex; flex-direction: column; gap: 6px; }
+    .order-detail-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-light); }
+    .order-detail-row .label { color: var(--text-muted); min-width: 56px; }
+    .order-detail-row .value { color: var(--text); font-weight: 500; }
+    .order-item-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+    .order-income { font-size: 18px; font-weight: 700; color: var(--primary); font-family: 'Quicksand', sans-serif; }
+    .order-income span { font-size: 11px; font-weight: 400; color: var(--text-muted); }
+
+    /* ===== INCOME PAGE ===== */
+    .income-hero {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      margin: 0 16px 20px;
+      border-radius: var(--radius);
+      padding: 28px 20px 24px;
+      text-align: center;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+    .income-hero::before {
+      content: '';
+      position: absolute; top: -50%; right: -30%;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .income-hero-label { font-size: 13px; opacity: 0.8; margin-bottom: 6px; }
+    .income-hero-amount { font-size: 44px; font-weight: 700; font-family: 'Quicksand', sans-serif; line-height: 1; margin-bottom: 4px; }
+    .income-hero-amount small { font-size: 16px; opacity: 0.9; }
+    .income-hero-detail { font-size: 12px; opacity: 0.7; margin-bottom: 20px; }
+    .income-hero-btns { display: flex; gap: 12px; justify-content: center; }
+    .income-hero-btns .btn { padding: 10px 24px; font-size: 13px; }
+    .btn-white { background: white; color: var(--primary); font-weight: 700; }
+    .btn-white-outline { background: transparent; border: 1.5px solid rgba(255,255,255,0.6); color: white; }
+
+    .income-stats {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 12px; padding: 0 16px; margin-bottom: 16px;
+    }
+    .income-stat-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      box-shadow: 0 2px 12px var(--shadow);
+    }
+    .income-stat-label { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+    .income-stat-value { font-size: 20px; font-weight: 700; color: var(--text); font-family: 'Quicksand', sans-serif; }
+    .income-stat-value.green { color: var(--success); }
+    .income-stat-value.orange { color: var(--accent); }
+
+    .settlement-info {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      margin: 0 16px 16px;
+      padding: 16px;
+      box-shadow: 0 2px 12px var(--shadow);
+      border-top: 3px solid var(--primary);
+    }
+    .settlement-info h4 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+    .settlement-bar {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+    }
+    .settlement-bar-track { flex: 1; height: 8px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden; }
+    .settlement-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--primary-light)); border-radius: 4px; width: 65%; }
+    .settlement-bar-text { font-size: 12px; color: var(--text-muted); font-weight: 500; min-width: 40px; text-align: right; }
+    .settlement-desc { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+
+    .withdraw-record {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      margin: 0 16px 16px;
+      padding: 16px;
+      box-shadow: 0 2px 12px var(--shadow);
+    }
+    .withdraw-record-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .withdraw-record-header h4 { font-size: 14px; font-weight: 600; }
+    .withdraw-record-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .withdraw-record-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .withdraw-record-item:first-of-type { padding-top: 0; }
+    .withdraw-record-left .amount { font-size: 14px; font-weight: 600; color: var(--text); }
+    .withdraw-record-left .status { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .withdraw-record-left .status.done { color: var(--success); }
+    .withdraw-record-right .date { font-size: 12px; color: var(--text-muted); }
+
+    /* ===== MY PAGE ===== */
+    .my-header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      padding: 20px 20px 40px;
+      border-radius: 0 0 32px 32px;
+    }
+    .my-profile { display: flex; align-items: center; gap: 14px; }
+    .my-avatar-wrap { position: relative; }
+    .cert-badge {
+      position: absolute; bottom: -2px; right: -2px;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--success);
+      border: 2px solid var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; color: white;
+    }
+    .my-profile-info { flex: 1; }
+    .my-profile-name { font-size: 20px; font-weight: 700; color: white; }
+    .my-profile-meta { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 3px; }
+    .my-edit-btn { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-size: 16px; }
+
+    .cert-status-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      margin: -24px 16px 16px;
+      padding: 18px;
+      box-shadow: 0 4px 24px var(--shadow-lg);
+      position: relative;
+    }
+    .cert-status-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .cert-status-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--success-bg); display: flex; align-items: center; justify-content: center; font-size: 22px; }
+    .cert-status-text h4 { font-size: 14px; font-weight: 600; color: var(--text); }
+    .cert-status-text p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .cert-status-text p span { color: var(--success); font-weight: 600; }
+    .cert-progress { height: 6px; background: var(--bg-secondary); border-radius: 3px; overflow: hidden; }
+    .cert-progress-fill { height: 100%; background: linear-gradient(90deg, var(--success), #66BB6A); border-radius: 3px; width: 100%; }
+
+    .my-menu-group { background: var(--bg-card); border-radius: var(--radius); margin: 0 16px 12px; overflow: hidden; box-shadow: 0 2px 16px var(--shadow); }
+    .my-menu-item { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
+    .my-menu-item:last-child { border-bottom: none; }
+    .my-menu-item:active { background: var(--bg-secondary); }
+    .my-menu-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .my-menu-text { flex: 1; min-width: 0; }
+    .my-menu-text h4 { font-size: 14px; font-weight: 600; color: var(--text); }
+    .my-menu-text p { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .my-menu-arrow { color: var(--text-muted); font-size: 18px; }
+
+    .helper-grade {
+      background: linear-gradient(135deg, var(--gold-bg), rgba(255,215,0,0.05));
+      border: 1px solid rgba(255,215,0,0.3);
+      border-radius: var(--radius);
+      margin: 0 16px 12px;
+      padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .helper-grade-icon { font-size: 28px; }
+    .helper-grade-info { flex: 1; }
+    .helper-grade-info h4 { font-size: 14px; font-weight: 700; color: #8B6914; }
+    .helper-grade-info p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .helper-grade-stars { display: flex; gap: 2px; font-size: 14px; color: var(--gold); }
+
+    /* Switch App Banner */
+    .switch-app-banner {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      margin: 0 16px 20px;
+      padding: 16px 18px;
+      display: flex; align-items: center; gap: 12px;
+      box-shadow: 0 2px 16px var(--shadow);
+      cursor: pointer;
+      border: 1.5px dashed var(--primary);
+    }
+    .switch-app-banner-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--primary-bg); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .switch-app-banner-text { flex: 1; }
+    .switch-app-banner-text h4 { font-size: 14px; font-weight: 600; color: var(--primary); }
+    .switch-app-banner-text p { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .switch-app-banner-arrow { color: var(--primary); font-size: 18px; }
+
+    /* ===== CERTIFICATION MODAL ===== */
+    .cert-step { display: flex; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--border); }
+    .cert-step:last-child { border-bottom: none; }
+    .cert-step-num { width: 32px; height: 32px; border-radius: 50%; background: var(--primary-bg); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+    .cert-step-num.done { background: var(--success); color: white; }
+    .cert-step-content { flex: 1; }
+    .cert-step-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .cert-step-desc { font-size: 12px; color: var(--text-muted); }
+    .cert-upload-area {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: all 0.2s;
+    }
+    .cert-upload-area:hover { border-color: var(--primary); background: var(--primary-bg); }
+    .cert-upload-area p { font-size: 13px; color: var(--text-muted); }
+    .cert-upload-area p span { color: var(--primary); font-weight: 600; }
+    .cert-upload-preview { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .cert-preview-img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); }
+
+    /* ===== WITHDRAW MODAL ===== */
+    .withdraw-amount-display {
+      text-align: center; padding: 24px 0 20px;
+      border-bottom: 1px solid var(--border); margin-bottom: 20px;
+    }
+    .withdraw-amount-display .label { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+    .withdraw-amount-display .amount { font-size: 40px; font-weight: 700; color: var(--primary); font-family: 'Quicksand', sans-serif; }
+    .withdraw-amount-display .amount small { font-size: 16px; }
+    .withdraw-amount-display .balance { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+    .withdraw-amount-presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+    .withdraw-preset { padding: 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: var(--bg); text-align: center; font-size: 14px; font-weight: 600; color: var(--text); cursor: pointer; transition: all 0.2s; }
+    .withdraw-preset.selected { border-color: var(--primary); background: var(--primary-bg); color: var(--primary); }
+    .withdraw-input-wrap { display: flex; align-items: center; gap: 8px; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 20px; }
+    .withdraw-input-wrap .yuan { font-size: 20px; font-weight: 600; color: var(--text); }
+    .withdraw-input-wrap input { flex: 1; border: none; outline: none; font-size: 20px; font-weight: 600; color: var(--text); background: transparent; font-family: 'Quicksand', sans-serif; }
+    .withdraw-tip { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; padding: 12px; background: var(--warning-bg); border-radius: var(--radius-xs); }
+    .withdraw-tip strong { color: var(--warning); }
+
+    /* ===== CHAT MODAL ===== */
+    .chat-header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-card); border-bottom: 1px solid var(--border); }
+    .chat-header-info h4 { font-size: 14px; font-weight: 600; color: var(--text); }
+    .chat-header-info p { font-size: 11px; color: var(--text-muted); }
+    .chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .chat-msg { max-width: 75%; padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.5; }
+    .chat-msg.received { background: var(--bg-secondary); color: var(--text); align-self: flex-start; border-bottom-left-radius: 4px; }
+    .chat-msg.sent { background: var(--primary); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .chat-input-bar { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--bg-card); border-top: 1px solid var(--border); }
+    .chat-input-bar input { flex: 1; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 20px; font-size: 14px; background: var(--bg); outline: none; }
+    .chat-input-bar input:focus { border-color: var(--primary); }
+    .chat-send-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--primary); color: white; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span class="status-time">9:41</span>
+      <div class="status-icons">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.237 4.237 0 0 0-6 0zm-4-4l2 2a7.074 7.074 0 0 1 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 4h-3V2h-4v2H7v18h10V4z"/></svg>
+      </div>
+    </div>
+
+    <!-- Pages Container -->
+    <div class="pages-container">
+
+      <!-- ===== HOME PAGE ===== -->
+      <div class="page active" id="page-home">
+        <div class="helper-home-header animate-in">
+          <div class="helper-greeting">
+            <div class="helper-avatar-wrap">
+              <div class="avatar">丽</div>
+              <div class="online-dot"></div>
+            </div>
+            <div class="helper-info">
+              <h2>王丽，早上好 👋</h2>
+              <p>阳光花城三期 · 已认证帮手</p>
+            </div>
+            <div style="flex: 1;"></div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+              <div class="helper-level-badge">⭐ Lv.3 铜牌帮手</div>
+              <div onclick="showToast('您已开启接单')" style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                <div class="status-dot green"></div>
+                <span style="font-size: 11px; color: var(--text-light);">接单中</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Today's Stats -->
+        <div class="today-stats animate-in delay-1">
+          <div class="today-stat">
+            <div class="today-stat-value">3</div>
+            <div class="today-stat-label">今日任务</div>
+          </div>
+          <div class="today-stat">
+            <div class="today-stat-value accent">¥186</div>
+            <div class="today-stat-label">本周收入</div>
+          </div>
+          <div class="today-stat">
+            <div class="today-stat-value gold">4.9</div>
+            <div class="today-stat-label">综合评分</div>
+          </div>
+        </div>
+
+        <!-- Platform Assigned Order -->
+        <div class="section-header animate-in delay-1" style="margin-bottom: 10px;">
+          <span class="section-title">🏠 平台派单</span>
+          <span class="section-link">仅限您接收 ›</span>
+        </div>
+        <div class="platform-banner animate-in delay-1">
+          <div class="platform-banner-icon">🎯</div>
+          <div class="platform-banner-text">
+            <h4>新派单：遛狗服务</h4>
+            <p>阳光花城三期 · 李小姐 · ¥70 · 今日 10:00</p>
+          </div>
+          <div onclick="showToast('接单成功！')" class="btn btn-white" style="font-size: 12px; padding: 8px 14px;">接单</div>
+        </div>
+
+        <!-- Countdown Banner -->
+        <div class="pool-countdown animate-in delay-2">
+          <div>
+            <div class="pool-countdown-text">⏰ 新订单池刷新倒计时</div>
+            <div style="font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px;">预计下次刷新 14:00</div>
+          </div>
+          <div style="text-align: right;">
+            <div class="pool-countdown-time">4:32</div>
+            <div class="pool-countdown-label">小时后更新</div>
+          </div>
+        </div>
+
+        <!-- Order Pool -->
+        <div class="section-header animate-in delay-2" style="margin-top: 16px; margin-bottom: 10px;">
+          <span class="section-title">📋 抢单池 <span style="font-size: 12px; color: var(--danger); font-weight: 600;">3 单可抢</span></span>
+          <span class="section-link" onclick="showToast('筛选条件')">筛选 ›</span>
+        </div>
+
+        <!-- Pool Order 1 - Urgent -->
+        <div class="task-card urgent animate-in delay-2">
+          <div class="task-card-header">
+            <div class="task-pet-info">
+              <div class="task-pet-icon">🐕</div>
+              <div>
+                <div class="task-pet-name">遛狗 - 球球</div>
+                <div class="task-pet-meta">🐕 金毛 · 阳光花城三期</div>
+              </div>
+            </div>
+            <div>
+              <span class="tag tag-danger">⚡ 紧急</span>
+            </div>
+          </div>
+          <div class="task-tags">
+            <span class="task-tag tag-primary">🐕 遛狗</span>
+            <span class="task-tag tag-warning">30分钟内</span>
+          </div>
+          <div class="task-info-grid">
+            <div class="task-info-item">
+              <span class="task-info-label">宠主</span>
+              <span class="task-info-value">张先生</span>
+            </div>
+            <div class="task-info-item">
+              <span class="task-info-label">时间</span>
+              <span class="task-info-value">今天 14:00</span>
+            </div>
+            <div class="task-info-item">
+              <span class="task-info-label">时长</span>
+              <span class="task-info-value">2小时</span>
+            </div>
+            <div class="task-info-item">
+              <span class="task-info-label">地址</span>
+              <span class="task-info-value">7栋2单元</span>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="task-price">¥70 <span>/ 2小时</span></div>
+            <div style="display: flex; gap: 8px;">
+              <button onclick="showToast('查看详情')" class="btn btn-secondary btn-sm">详情</button>
+              <button onclick="showToast('抢单成功！')" class="btn btn-accent btn-sm">立即抢</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pool Order 2 -->
+        <div class="task-card animate-in delay-3">
+          <div class="task-card-header">
+            <div class="task-pet-info">
+              <div class="task-pet-icon">🐱</div>
+              <div>
+                <div class="task-pet-name">喂猫 - 小黑</div>
+                <div class="task-pet-meta">🐱 英短 · 阳光花城一期</div>
+              </div>
+            </div>
+            <div>
+              <span class="tag tag-info">📍 附近</span>
+            </div>
+          </div>
+          <div class="task-tags">
+            <span class="task-tag tag-accent">🐱 喂猫</span>
+            <span class="task-tag" style="background: var(--bg-secondary); color: var(--text-muted);">今天 12:00</span>
+          </div>
+          <div class="task-info-grid">
+            <div class="task-info-item">
+              <span class="task-info-label">宠主</span>
+              <span class="task-info-value">王阿姨</span>
+            </div>
+            <div class="task-info-item">
+              <span class="task-info-label">时间</span>
+              <span class="task-info-value">今天 12:00</span>
+            </div>
+            <div class="task-info-item">
+              <span class="task-info-label">时长</span>
+              <span class="task-info-value">1小时</span>
+            </div>
+            <div class="task-info-item">
+              <span class="task-info-label">地址</span>
+              <span class="task-info-value">3栋1单元</span>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="task-price">¥45 <span>/ 1小时</span></div>
+            <div style="display: flex; gap: 8px;">
+              <button onclick="showToast('查看详情')" class="btn btn-secondary btn-sm">详情</button>
+              <button onclick="showToast('抢单成功！')" class="btn btn-primary btn-sm">立即抢</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pool Order 3 -->
+        <div class="task-card animate-in delay-4">
+          <div class="task-card-header">
+            <div class="task-pet-info">
+              <div class="task-pet-icon">🎾</div>
+              <div>
+                <div class="task-pet-name">陪玩 - 奶茶</div>
+                <div class="task-pet-meta">🐱 布偶 · 阳光花城三期</div>
+              </div>
+            </div>
+          </div>
+          <div class="task-tags">
+            <span class="task-tag tag-info">🎾 陪玩</span>
+            <span class="task-tag" style="background: var(--bg-secondary); color: var(--text-muted);">明天 10:00</span>
+          </div>
+          <div class="task-info-grid">
+            <div class="task-info-item">
+              <span class="task-info-label">宠主</span>
+              <span class="task-info-value">陈太太</span>
+            </div>
+            <div class="task-info-item">
+              <span class="task-info-label">时间</span>
+              <span class="task-info-value">明天 10:00</span>
+            </div>
+            <div class="task-info-item">
+              <span class="task-info-label">时长</span>
+              <span class="task-info-value">2小时</span>
+            </div>
+            <div class="task-info-item">
+              <span class="task-info-label">地址</span>
+              <span class="task-info-value">5栋3单元</span>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="task-price">¥60 <span>/ 2小时</span></div>
+            <div style="display: flex; gap: 8px;">
+              <button onclick="showToast('查看详情')" class="btn btn-secondary btn-sm">详情</button>
+              <button onclick="showToast('已预约')" class="btn btn-outline btn-sm" style="border-color: var(--primary); color: var(--primary);">预约</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="height: 100px;"></div>
+      </div>
+
+      <!-- ===== ORDERS PAGE ===== -->
+      <div class="page" id="page-orders">
+        <div style="padding: 16px 20px 0;">
+          <h1 class="page-title" style="font-size: 22px; margin-bottom: 14px;">我的订单</h1>
+        </div>
+
+        <div class="orders-tabs">
+          <div class="orders-tab active" onclick="switchOrdersTab(this, 'ongoing')">进行中</div>
+          <div class="orders-tab" onclick="switchOrdersTab(this, 'completed')">已完成</div>
+          <div class="orders-tab" onclick="switchOrdersTab(this, 'all')">全部</div>
+        </div>
+
+        <div id="ongoing-orders">
+          <!-- Ongoing Order 1 -->
+          <div class="order-item animate-in delay-1">
+            <div class="order-item-header">
+              <div class="order-item-service">
+                <div class="order-item-icon">🐕</div>
+                <div>
+                  <div class="order-item-name">遛狗 - 豆豆</div>
+                  <div class="order-item-meta">订单号 #20260413045</div>
+                </div>
+              </div>
+              <span class="order-item-status ongoing">服务中</span>
+            </div>
+            <div class="order-item-divider"></div>
+            <div class="order-item-details">
+              <div class="order-detail-row"><span class="label">宠主</span><span class="value">李小姐</span></div>
+              <div class="order-detail-row"><span class="label">时间</span><span class="value">今天 10:00-12:00</span></div>
+              <div class="order-detail-row"><span class="label">地址</span><span class="value">阳光花城三期 7栋2单元</span></div>
+            </div>
+            <div class="order-item-footer">
+              <div class="order-income">¥60 <span>/ 收入</span></div>
+              <div style="display: flex; gap: 8px;">
+                <button onclick="showToast('正在联系...')" class="btn btn-secondary btn-sm">📞 联系</button>
+                <button onclick="showToast('已完成服务')" class="btn btn-primary btn-sm">确认完成</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ongoing Order 2 -->
+          <div class="order-item animate-in delay-2">
+            <div class="order-item-header">
+              <div class="order-item-service">
+                <div class="order-item-icon">🐱</div>
+                <div>
+                  <div class="order-item-name">喂猫 - 咪咪</div>
+                  <div class="order-item-meta">订单号 #20260413048</div>
+                </div>
+              </div>
+              <span class="order-item-status ongoing">待上门</span>
+            </div>
+            <div class="order-item-divider"></div>
+            <div class="order-item-details">
+              <div class="order-detail-row"><span class="label">宠主</span><span class="value">陈先生</span></div>
+              <div class="order-detail-row"><span class="label">时间</span><span class="value">今天 15:00-16:00</span></div>
+              <div class="order-detail-row"><span class="label">地址</span><span class="value">阳光花城三期 9栋1单元</span></div>
+            </div>
+            <div class="order-item-footer">
+              <div class="order-income">¥40 <span>/ 收入</span></div>
+              <div style="display: flex; gap: 8px;">
+                <button onclick="showToast('正在打开聊天...')" class="btn btn-secondary btn-sm">💬 聊天</button>
+                <button onclick="showToast('已导航到目的地')" class="btn btn-primary btn-sm">导航</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="completed-orders" style="display: none;">
+          <div class="order-item animate-in delay-1">
+            <div class="order-item-header">
+              <div class="order-item-service">
+                <div class="order-item-icon">🐱</div>
+                <div>
+                  <div class="order-item-name">喂猫 - 小白</div>
+                  <div class="order-item-meta">订单号 #20260412039</div>
+                </div>
+              </div>
+              <span class="order-item-status completed">已完成</span>
+            </div>
+            <div class="order-item-divider"></div>
+            <div class="order-item-details">
+              <div class="order-detail-row"><span class="label">宠主</span><span class="value">王阿姨</span></div>
+              <div class="order-detail-row"><span class="label">时间</span><span class="value">昨天 09:00-10:00</span></div>
+              <div class="order-detail-row"><span class="label">地址</span><span class="value">阳光花城一期 3栋1单元</span></div>
+            </div>
+            <div class="order-item-footer">
+              <div class="order-income">¥40 <span>/ 收入</span></div>
+              <div style="display: flex; gap: 8px;">
+                <button onclick="showToast('查看评价')" class="btn btn-secondary btn-sm">⭐ 查看评价</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="height: 100px;"></div>
+      </div>
+
+      <!-- ===== INCOME PAGE ===== -->
+      <div class="page" id="page-income">
+        <div style="padding: 16px 0 0;">
+          <div class="income-hero animate-in">
+            <div class="income-hero-label">可提现余额</div>
+            <div class="income-hero-amount"><small>¥</small>128.50</div>
+            <div class="income-hero-detail">结算周期：每周一可提现上周收入 · 最低 ¥50</div>
+            <div class="income-hero-btns">
+              <button onclick="showModal('modal-withdraw')" class="btn btn-white">立即提现</button>
+              <button onclick="showToast('查看收支明细')" class="btn btn-white-outline">明细</button>
+            </div>
+          </div>
+
+          <div class="income-stats animate-in delay-1">
+            <div class="income-stat-card">
+              <div class="income-stat-label">本周收入</div>
+              <div class="income-stat-value green">¥186</div>
+            </div>
+            <div class="income-stat-card">
+              <div class="income-stat-label">本月收入</div>
+              <div class="income-stat-value green">¥892</div>
+            </div>
+            <div class="income-stat-card">
+              <div class="income-stat-label">累计收入</div>
+              <div class="income-stat-value">¥6,840</div>
+            </div>
+            <div class="income-stat-card">
+              <div class="income-stat-label">累计完成订单</div>
+              <div class="income-stat-value orange">286</div>
+            </div>
+          </div>
+
+          <div class="settlement-info animate-in delay-2">
+            <h4>📅 本次结算进度</h4>
+            <div class="settlement-bar">
+              <div class="settlement-bar-track">
+                <div class="settlement-bar-fill"></div>
+              </div>
+              <div class="settlement-bar-text">65%</div>
+            </div>
+            <p class="settlement-desc">本周已完成订单 3/5 单，待结算金额 ¥156.00<br>下周一（4月20日）可提现，预计到账微信钱包</p>
+          </div>
+
+          <div class="withdraw-record animate-in delay-3">
+            <div class="withdraw-record-header">
+              <h4>💳 近期提现记录</h4>
+              <span class="section-link" onclick="showToast('查看全部记录')">全部 ›</span>
+            </div>
+            <div class="withdraw-record-item">
+              <div class="withdraw-record-left">
+                <div class="amount">¥ 200.00</div>
+                <div class="status done">已到账 · 微信钱包</div>
+              </div>
+              <div class="withdraw-record-right">
+                <div class="date">4月6日</div>
+              </div>
+            </div>
+            <div class="withdraw-record-item">
+              <div class="withdraw-record-left">
+                <div class="amount">¥ 350.00</div>
+                <div class="status done">已到账 · 微信钱包</div>
+              </div>
+              <div class="withdraw-record-right">
+                <div class="date">3月30日</div>
+              </div>
+            </div>
+            <div class="withdraw-record-item">
+              <div class="withdraw-record-left">
+                <div class="amount">¥ 180.00</div>
+                <div class="status done">已到账 · 微信钱包</div>
+              </div>
+              <div class="withdraw-record-right">
+                <div class="date">3月23日</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Settlement Cycle Info -->
+          <div class="card animate-in delay-4" style="margin: 0 16px;">
+            <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">💡 结算周期说明</h4>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--primary-bg); display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0;">1</div>
+                <div style="font-size: 13px; color: var(--text-light);">每周一 0点，平台自动结算上周（周一至周日）已完成订单</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--primary-bg); display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0;">2</div>
+                <div style="font-size: 13px; color: var(--text-light);">提现最低额度 ¥50，不满 ¥50 顺延至下周</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--primary-bg); display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0;">3</div>
+                <div style="font-size: 13px; color: var(--text-light);">到账时间：周一至周三陆续到账微信钱包，约 1-3 个工作日</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="height: 100px;"></div>
+        </div>
+      </div>
+
+      <!-- ===== MY PAGE ===== -->
+      <div class="page" id="page-my">
+        <div class="my-header animate-in">
+          <div class="my-profile">
+            <div class="my-avatar-wrap">
+              <div class="avatar xl">丽</div>
+              <div class="cert-badge">✓</div>
+            </div>
+            <div class="my-profile-info">
+              <div class="my-profile-name">王丽</div>
+              <div class="my-profile-meta">阳光花城三期 · 已认证帮手 ⭐ Lv.3</div>
+            </div>
+            <div class="my-edit-btn" onclick="showToast('编辑资料')">✏️</div>
+          </div>
+        </div>
+
+        <!-- Helper Grade -->
+        <div class="helper-grade animate-in delay-1">
+          <div class="helper-grade-icon">🏅</div>
+          <div class="helper-grade-info">
+            <h4>铜牌帮手 Lv.3</h4>
+            <p>再完成 14 单可升级银牌帮手，获得更多派单优先权</p>
+          </div>
+          <div class="helper-grade-stars">⭐⭐⭐</div>
+        </div>
+
+        <!-- Switch App Banner -->
+        <div class="switch-app-banner animate-in delay-1" onclick="showToast('跳转宠主端')">
+          <div class="switch-app-banner-icon">🐾</div>
+          <div class="switch-app-banner-text">
+            <h4>切换到宠主端</h4>
+            <p>我有宠物需要服务</p>
+          </div>
+          <div class="switch-app-banner-arrow">›</div>
+        </div>
+
+        <!-- Certification Status -->
+        <div class="cert-status-card animate-in delay-1" onclick="showModal('modal-cert')">
+          <div class="cert-status-row">
+            <div class="cert-status-icon">📋</div>
+            <div class="cert-status-text">
+              <h4>帮手认证</h4>
+              <p>认证状态：<span>已通过 ✓</span> · 有效期至 2027年4月</p>
+            </div>
+          </div>
+          <div class="cert-progress">
+            <div class="cert-progress-fill"></div>
+          </div>
+          <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">认证材料已审核通过 · ID: HELPER-2024-0289</p>
+        </div>
+
+        <!-- Menu Group 1: Tools -->
+        <div class="my-menu-group animate-in delay-2">
+          <div class="my-menu-item" onclick="showModal('modal-servicetime')">
+            <div class="my-menu-icon" style="background: var(--info-bg);">⏰</div>
+            <div class="my-menu-text">
+              <h4>服务时间设置</h4>
+              <p>设置您可接单的时间段</p>
+            </div>
+            <span class="my-menu-arrow">›</span>
+          </div>
+          <div class="my-menu-item" onclick="showToast('查看服务范围')">
+            <div class="my-menu-icon" style="background: var(--accent-bg);">📍</div>
+            <div class="my-menu-text">
+              <h4>服务范围</h4>
+              <p>阳光花城一至三期 · 500m内</p>
+            </div>
+            <span class="my-menu-arrow">›</span>
+          </div>
+          <div class="my-menu-item" onclick="showToast('查看帮手评分')">
+            <div class="my-menu-icon" style="background: var(--warning-bg);">⭐</div>
+            <div class="my-menu-text">
+              <h4>我的评分</h4>
+              <p>4.9分 · 共 286 条评价</p>
+            </div>
+            <span class="my-menu-arrow">›</span>
+          </div>
+        </div>
+
+        <!-- Menu Group 2: Settings -->
+        <div class="my-menu-group animate-in delay-3">
+          <div class="my-menu-item" onclick="showToast('查看资质证书')">
+            <div class="my-menu-icon" style="background: var(--purple-bg);">📜</div>
+            <div class="my-menu-text">
+              <h4>资质证书</h4>
+              <p>身份证、宠物照顾证明</p>
+            </div>
+            <span class="my-menu-arrow">›</span>
+          </div>
+          <div class="my-menu-item" onclick="showModal('modal-messages')">
+            <div class="my-menu-icon" style="background: var(--danger-bg);">🔔</div>
+            <div class="my-menu-text">
+              <h4>消息通知</h4>
+              <p>5 条新消息</p>
+            </div>
+            <span class="notif-badge">5</span>
+            <span class="my-menu-arrow">›</span>
+          </div>
+          <div class="my-menu-item" onclick="showToast('查看帮助')">
+            <div class="my-menu-icon" style="background: var(--success-bg);">❓</div>
+            <div class="my-menu-text">
+              <h4>帮助与反馈</h4>
+              <p>常见问题、联系客服</p>
+            </div>
+            <span class="my-menu-arrow">›</span>
+          </div>
+          <div class="my-menu-item" onclick="showToast('版本 1.0.0')">
+            <div class="my-menu-icon" style="background: var(--bg-secondary);">ℹ️</div>
+            <div class="my-menu-text">
+              <h4>关于我们</h4>
+              <p>版本 1.0.0</p>
+            </div>
+            <span class="my-menu-arrow">›</span>
+          </div>
+        </div>
+
+        <div style="height: 100px;"></div>
+      </div>
+
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <div class="tab-item active" data-tab="0" onclick="switchTab(0)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>首页</span>
+      </div>
+      <div class="tab-item" data-tab="1" onclick="switchTab(1)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span>订单</span>
+      </div>
+      <div class="tab-item" data-tab="2" onclick="switchTab(2)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span>收入</span>
+      </div>
+      <div class="tab-item" data-tab="3" onclick="switchTab(3)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>我的</span>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Modal Overlay -->
+    <div class="modal-overlay" id="modal-overlay">
+      <div class="modal" id="modal-helper" style="display: none;">
+        <div class="modal-header">
+          <span class="modal-title">帮手详情</span>
+          <div class="modal-close" onclick="closeModal()">✕</div>
+        </div>
+        <div class="modal-body" id="modal-helper-body"></div>
+      </div>
+
+      <div class="modal" id="modal-confirm" style="display: none;">
+        <div class="modal-header">
+          <span class="modal-title">确认操作</span>
+          <div class="modal-close" onclick="closeModal()">✕</div>
+        </div>
+        <div class="modal-body" id="modal-confirm-body"></div>
+      </div>
+
+      <!-- Withdraw Modal -->
+      <div class="modal" id="modal-withdraw" style="display: none;">
+        <div class="modal-header">
+          <span class="modal-title">提现到微信钱包</span>
+          <div class="modal-close" onclick="closeModal()">✕</div>
+        </div>
+        <div class="modal-body">
+          <div class="withdraw-amount-display">
+            <div class="label">可提现金额</div>
+            <div class="amount"><small>¥</small>128.50</div>
+            <div class="balance">本周收入 ¥186.00 · 本月收入 ¥892.00</div>
+          </div>
+          <div class="withdraw-amount-presets">
+            <div class="withdraw-preset" onclick="selectWithdrawPreset(this, 50)">¥50</div>
+            <div class="withdraw-preset selected" onclick="selectWithdrawPreset(this, 100)">¥100</div>
+            <div class="withdraw-preset" onclick="selectWithdrawPreset(this, 'all')">全部</div>
+          </div>
+          <div class="withdraw-input-wrap">
+            <span class="yuan">¥</span>
+            <input type="number" id="withdraw-input" value="100" oninput="updateWithdrawPreview()">
+          </div>
+          <div class="withdraw-tip">
+            <strong>💡 温馨提示：</strong>提现将于下周一（4月20日）处理，预计 1-3 个工作日到账微信钱包。最低提现金额 ¥50。
+          </div>
+          <button class="btn btn-primary btn-block btn-lg" onclick="showToast('提现申请已提交！')">确认提现 ¥<span id="withdraw-confirm-amount">100</span></button>
+        </div>
+      </div>
+
+      <!-- Certification Modal -->
+      <div class="modal" id="modal-cert" style="display: none;">
+        <div class="modal-header">
+          <span class="modal-title">帮手认证信息</span>
+          <div class="modal-close" onclick="closeModal()">✕</div>
+        </div>
+        <div class="modal-body">
+          <div class="cert-step">
+            <div class="cert-step-num done">✓</div>
+            <div class="cert-step-content">
+              <div class="cert-step-title">身份认证</div>
+              <div class="cert-step-desc">身份证信息已审核通过</div>
+              <div class="cert-upload-preview" style="margin-top: 8px;">
+                <img src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=100&h=100&fit=crop" class="cert-preview-img">
+              </div>
+            </div>
+          </div>
+          <div class="cert-step">
+            <div class="cert-step-num done">✓</div>
+            <div class="cert-step-content">
+              <div class="cert-step-title">宠物照顾经验</div>
+              <div class="cert-step-desc">已上传宠物照顾经验证明</div>
+            </div>
+          </div>
+          <div class="cert-step">
+            <div class="cert-step-num done">✓</div>
+            <div class="cert-step-content">
+              <div class="cert-step-title">小区认证</div>
+              <div class="cert-step-desc">阳光花城三期 · 已验证</div>
+            </div>
+          </div>
+          <div style="background: var(--success-bg); border-radius: var(--radius-sm); padding: 14px; margin-top: 16px; text-align: center;">
+            <div style="font-size: 28px; margin-bottom: 4px;">✅</div>
+            <div style="font-size: 14px; font-weight: 600; color: #388E3C;">认证已通过</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">有效期至 2027年4月12日</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Service Time Modal -->
+      <div class="modal" id="modal-servicetime" style="display: none;">
+        <div class="modal-header">
+          <span class="modal-title">服务时间设置</span>
+          <div class="modal-close" onclick="closeModal()">✕</div>
+        </div>
+        <div class="modal-body">
+          <p style="font-size: 13px; color: var(--text-light); margin-bottom: 16px;">设置您可接单的时间段，帮助平台更精准地为您推送订单。</p>
+          <div style="margin-bottom: 20px;">
+            <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 10px;">工作日（周一至周五）</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <div onclick="toggleTimeSlot(this)" style="padding: 12px; background: var(--primary-bg); border-radius: var(--radius-sm); text-align: center; border: 2px solid var(--primary); cursor: pointer;">
+                <div style="font-size: 13px; font-weight: 600; color: var(--primary);">上午</div>
+                <div style="font-size: 11px; color: var(--text-muted);">8:00-12:00</div>
+              </div>
+              <div onclick="toggleTimeSlot(this)" style="padding: 12px; background: var(--bg-secondary); border-radius: var(--radius-sm); text-align: center; border: 2px solid transparent; cursor: pointer;">
+                <div style="font-size: 13px; font-weight: 600; color: var(--text);">下午</div>
+                <div style="font-size: 11px; color: var(--text-muted);">14:00-18:00</div>
+              </div>
+            </div>
+          </div>
+          <div style="margin-bottom: 20px;">
+            <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 10px;">周末（周六日）</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <div onclick="toggleTimeSlot(this)" style="padding: 12px; background: var(--primary-bg); border-radius: var(--radius-sm); text-align: center; border: 2px solid var(--primary); cursor: pointer;">
+                <div style="font-size: 13px; font-weight: 600; color: var(--primary);">上午</div>
+                <div style="font-size: 11px; color: var(--text-muted);">9:00-12:00</div>
+              </div>
+              <div onclick="toggleTimeSlot(this)" style="padding: 12px; background: var(--primary-bg); border-radius: var(--radius-sm); text-align: center; border: 2px solid var(--primary); cursor: pointer;">
+                <div style="font-size: 13px; font-weight: 600; color: var(--primary);">下午</div>
+                <div style="font-size: 11px; color: var(--text-muted);">14:00-18:00</div>
+              </div>
+            </div>
+          </div>
+          <div style="background: var(--info-bg); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 16px;">
+            <p style="font-size: 12px; color: var(--info);">💡 设置后，平台将仅在您空闲时段为您推送订单，不会打扰您的休息时间。</p>
+          </div>
+          <button class="btn btn-primary btn-block" onclick="showToast('服务时间已保存')">保存设置</button>
+        </div>
+      </div>
+
+      <!-- Messages Modal -->
+      <div class="modal" id="modal-messages" style="display: none; max-height: 90vh;">
+        <div class="modal-header">
+          <span class="modal-title">消息通知</span>
+          <div class="modal-close" onclick="closeModal()">✕</div>
+        </div>
+        <div class="modal-body" style="padding: 0;">
+          <div style="border-bottom: 1px solid var(--border);">
+            <div style="display: flex; gap: 0;">
+              <div style="flex:1; padding: 12px; text-align: center; font-size: 13px; font-weight: 600; color: var(--primary); border-bottom: 2px solid var(--primary);">订单消息</div>
+              <div style="flex:1; padding: 12px; text-align: center; font-size: 13px; color: var(--text-muted);">系统通知</div>
+              <div style="flex:1; padding: 12px; text-align: center; font-size: 13px; color: var(--text-muted);">互动消息</div>
+            </div>
+          </div>
+          <div style="padding: 16px;">
+            <div style="display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); align-items: flex-start;">
+              <div style="width: 40px; height: 40px; border-radius: 10px; background: var(--accent-bg); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">💬</div>
+              <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 13px; font-weight: 600; color: var(--text);">新订单咨询</span>
+                  <span style="font-size: 11px; color: var(--text-muted);">今天 09:30</span>
+                </div>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px; line-height: 1.5;">李小姐询问：球球有点怕生，第一次约遛狗需要多长时间熟悉？</p>
+              </div>
+              <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--danger); flex-shrink: 0; margin-top: 4px;"></div>
+            </div>
+            <div style="display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); align-items: flex-start;">
+              <div style="width: 40px; height: 40px; border-radius: 10px; background: var(--success-bg); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">✅</div>
+              <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 13px; font-weight: 600; color: var(--text);">订单已完成</span>
+                  <span style="font-size: 11px; color: var(--text-muted);">今天 11:20</span>
+                </div>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px; line-height: 1.5;">订单 #20260413045 已完成，收入 ¥60 已到账暂存，需结算后提现。</p>
+              </div>
+            </div>
+            <div style="display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); align-items: flex-start;">
+              <div style="width: 40px; height: 40px; border-radius: 10px; background: var(--info-bg); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">🔔</div>
+              <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 13px; font-weight: 600; color: var(--text);">平台派单通知</span>
+                  <span style="font-size: 11px; color: var(--text-muted);">今天 08:00</span>
+                </div>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px; line-height: 1.5;">您有一条新的平台派单：遛狗服务（球球），请尽快接单！</p>
+              </div>
+            </div>
+            <div style="display: flex; gap: 12px; padding: 12px 0; align-items: flex-start;">
+              <div style="width: 40px; height: 40px; border-radius: 10px; background: var(--gold-bg); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">⭐</div>
+              <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 13px; font-weight: 600; color: var(--text);">新评价</span>
+                  <span style="font-size: 11px; color: var(--text-muted);">昨天 18:00</span>
+                </div>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px; line-height: 1.5;">李小姐给了您 5星 评价：「王丽姐姐非常有爱心，豆豆超级喜欢她！」</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ==================== TOAST ====================
+    function showToast(message, type = '') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast ' + type;
+      setTimeout(() => toast.classList.add('show'), 10);
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    // ==================== TAB SWITCHING ====================
+    function switchTab(tabIndex) {
+      document.querySelectorAll('.tab-item').forEach((item, i) => {
+        item.classList.toggle('active', i === tabIndex);
+      });
+      document.querySelectorAll('.page').forEach((page, i) => {
+        page.classList.toggle('active', i === tabIndex);
+      });
+    }
+
+    // ==================== ORDERS TAB ====================
+    function switchOrdersTab(el, filter) {
+      document.querySelectorAll('.orders-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      const ongoing = document.getElementById('ongoing-orders');
+      const completed = document.getElementById('completed-orders');
+      if (filter === 'ongoing') {
+        ongoing.style.display = 'block';
+        completed.style.display = 'none';
+      } else if (filter === 'completed') {
+        ongoing.style.display = 'none';
+        completed.style.display = 'block';
+      } else {
+        ongoing.style.display = 'block';
+        completed.style.display = 'block';
+      }
+    }
+
+    // ==================== MODAL ====================
+    function showModal(modalId) {
+      const overlay = document.getElementById('modal-overlay');
+      overlay.classList.add('show');
+      document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+      document.getElementById(modalId).style.display = 'block';
+    }
+
+    function closeModal() {
+      document.getElementById('modal-overlay').classList.remove('show');
+    }
+
+    document.getElementById('modal-overlay').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    // ==================== WITHDRAW ====================
+    function selectWithdrawPreset(el, amount) {
+      document.querySelectorAll('.withdraw-preset').forEach(p => p.classList.remove('selected'));
+      el.classList.add('selected');
+      const input = document.getElementById('withdraw-input');
+      if (amount === 'all') {
+        input.value = '128.50';
+      } else {
+        input.value = amount;
+      }
+      document.getElementById('withdraw-confirm-amount').textContent = input.value;
+    }
+
+    function updateWithdrawPreview() {
+      document.getElementById('withdraw-confirm-amount').textContent = document.getElementById('withdraw-input').value;
+    }
+
+    // ==================== SERVICE TIME TOGGLE ====================
+    function toggleTimeSlot(el) {
+      if (el.style.background === 'rgb(232, 244, 253)' || el.style.background === 'var(--primary-bg)') {
+        el.style.background = 'var(--bg-secondary)';
+        el.style.borderColor = 'transparent';
+        el.querySelector('div').style.color = 'var(--text)';
+      } else {
+        el.style.background = 'var(--primary-bg)';
+        el.style.borderColor = 'var(--primary)';
+        el.querySelector('div').style.color = 'var(--primary)';
+      }
+    }
+  </script>
+</body>
+</html>

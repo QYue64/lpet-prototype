@@ -530,10 +530,6 @@
     .profile-stat-value { font-size: 20px; font-weight: 700; color: var(--primary); font-family: 'Quicksand', sans-serif; }
     .profile-stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-    .role-switch { display: flex; background: var(--bg-secondary); padding: 4px; border-radius: 24px; margin: 0 16px 20px; }
-    .role-option { flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: 600; color: var(--text-light); border-radius: 20px; cursor: pointer; transition: all 0.2s; }
-    .role-option.active { background: var(--bg-card); color: var(--primary); box-shadow: 0 2px 8px var(--shadow); }
-
     .menu-group { background: var(--bg-card); border-radius: var(--radius); margin-bottom: 12px; overflow: hidden; box-shadow: 0 2px 12px var(--shadow); }
     .menu-item { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-bottom: 1px solid var(--border); cursor: pointer; transition: all 0.15s; }
     .menu-item:last-child { border-bottom: none; }
@@ -552,30 +548,6 @@
     .menu-badge { background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
 
     /* ========================================
-       HELPER MODE
-       ======================================== */
-    .earnings-card { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; position: relative; overflow: hidden; }
-    .earnings-card::before { content: ''; position: absolute; top: -20px; right: -20px; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%; }
-    .earnings-card h3 { font-size: 13px; color: rgba(255,255,255,0.8); margin-bottom: 8px; }
-    .earnings-card .amount { font-size: 36px; font-weight: 700; color: white; font-family: 'Quicksand', sans-serif; margin-bottom: 4px; }
-    .earnings-card .subtitle { font-size: 12px; color: rgba(255,255,255,0.7); }
-    .earnings-card .withdraw-btn { position: absolute; top: 20px; right: 20px; padding: 8px 16px; background: rgba(255,255,255,0.2); border-radius: 20px; font-size: 12px; font-weight: 600; color: white; cursor: pointer; border: none; }
-
-    .service-request-card { background: var(--bg-card); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 12px var(--shadow); margin-bottom: 14px; cursor: pointer; transition: all 0.2s; border-left: 4px solid var(--primary); }
-    .service-request-card:active { transform: scale(0.98); }
-    .service-request-card.urgent { border-left-color: var(--danger); }
-    .service-request-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .service-request-type { display: flex; align-items: center; gap: 10px; }
-    .service-request-type span:first-child { font-size: 28px; }
-    .service-request-type h4 { font-size: 15px; font-weight: 600; color: var(--text); }
-    .service-request-type p { font-size: 12px; color: var(--text-light); }
-    .service-request-meta { display: flex; gap: 16px; margin-bottom: 12px; }
-    .service-request-meta span { font-size: 12px; color: var(--text-light); display: flex; align-items: center; gap: 4px; }
-    .service-request-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--border); }
-    .service-request-price { font-size: 18px; font-weight: 700; color: var(--primary); font-family: 'Quicksand', sans-serif; }
-    .service-request-actions { display: flex; gap: 8px; }
-
-    /* ========================================
        EMPTY STATE
        ======================================== */
     .empty-state { text-align: center; padding: 48px 24px; }
@@ -590,7 +562,6 @@
     .helper-modal-avatar .avatar.xl { margin-bottom: 12px; }
     .helper-modal-avatar h3 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
     .helper-modal-avatar p { font-size: 13px; color: var(--text-light); margin-bottom: 12px; }
-    .helper-modal-stats { display: flex; gap: 32px; justify-content: center; margin-bottom: 16px; }
     .helper-modal-stat { text-align: center; }
     .helper-modal-stat-value { font-size: 18px; font-weight: 700; color: var(--primary); font-family: 'Quicksand', sans-serif; }
     .helper-modal-stat-label { font-size: 11px; color: var(--text-muted); }
@@ -889,110 +860,62 @@
           </div>
         </div>
 
-        <!-- Owner Mode -->
-        <div id="owner-content">
-          <div class="role-switch animate-in delay-2" id="role-switch">
-            <div class="role-option active" onclick="switchRole('owner', this)">我是宠主</div>
-            <div class="role-option" onclick="switchRole('helper', this)">我想当帮手</div>
-          </div>
-
-          <div class="page-content">
-            <div class="menu-group animate-in delay-2">
-              <div class="menu-item" onclick="switchTab(3)">
-                <div class="menu-icon green">📋</div>
-                <div class="menu-text"><h4>我的订单</h4><p>查看所有订单记录</p></div>
-                <span class="menu-arrow">›</span>
-              </div>
-              <div class="menu-item" onclick="showToast('钱包功能开发中')">
-                <div class="menu-icon orange">💰</div>
-                <div class="menu-text"><h4>我的钱包</h4><p>余额 ¥128.50</p></div>
-                <span class="menu-arrow">›</span>
-              </div>
-              <div class="menu-item" onclick="showPetsModal()">
-                <div class="menu-icon blue">🐾</div>
-                <div class="menu-text"><h4>我的宠物</h4><p>管理宠物档案</p></div>
-                <span class="menu-badge" id="pet-count-badge">2</span>
-                <span class="menu-arrow">›</span>
-              </div>
-              <div class="menu-item" onclick="showModal('modal-address')">
-                <div class="menu-icon purple">📍</div>
-                <div class="menu-text"><h4>我的地址</h4><p>管理常用服务地址</p></div>
-                <span class="menu-arrow">›</span>
-              </div>
-              <div class="menu-item" onclick="showModal('modal-coupons')">
-                <div class="menu-icon orange">🎫</div>
-                <div class="menu-text"><h4>我的优惠券</h4><p>3 张可用</p></div>
-                <span class="menu-badge" style="background: var(--accent);">3</span>
-                <span class="menu-arrow">›</span>
-              </div>
+        <!-- My Page Content -->
+        <div class="page-content">
+          <div class="menu-group animate-in delay-2">
+            <div class="menu-item" onclick="switchTab(3)">
+              <div class="menu-icon green">📋</div>
+              <div class="menu-text"><h4>我的订单</h4><p>查看所有订单记录</p></div>
+              <span class="menu-arrow">›</span>
             </div>
-
-            <div class="menu-group animate-in delay-3">
-              <div class="menu-item" onclick="showModal('modal-messages')">
-                <div class="menu-icon yellow">🔔</div>
-                <div class="menu-text"><h4>消息通知</h4><p>2 条新消息</p></div>
-                <span class="menu-badge">2</span>
-                <span class="menu-arrow">›</span>
-              </div>
-              <div class="menu-item" onclick="showModal('modal-support')">
-                <div class="menu-icon green">📞</div>
-                <div class="menu-text"><h4>联系客服</h4><p>工作日 9:00-18:00</p></div>
-                <span class="menu-arrow">›</span>
-              </div>
+            <div class="menu-item" onclick="showToast('钱包功能开发中')">
+              <div class="menu-icon orange">💰</div>
+              <div class="menu-text"><h4>我的钱包</h4><p>余额 ¥128.50</p></div>
+              <span class="menu-arrow">›</span>
             </div>
-
-            <div class="menu-group animate-in delay-4">
-              <div class="menu-item" onclick="showModal('modal-help')">
-                <div class="menu-icon blue">❓</div>
-                <div class="menu-text"><h4>帮助与反馈</h4><p>常见问题、联系客服</p></div>
-                <span class="menu-arrow">›</span>
-              </div>
-              <div class="menu-item" onclick="showModal('modal-about')">
-                <div class="menu-icon purple">ℹ️</div>
-                <div class="menu-text"><h4>关于我们</h4><p>版本 1.0.0</p></div>
-                <span class="menu-arrow">›</span>
-              </div>
+            <div class="menu-item" onclick="showPetsModal()">
+              <div class="menu-icon blue">🐾</div>
+              <div class="menu-text"><h4>我的宠物</h4><p>管理宠物档案</p></div>
+              <span class="menu-badge" id="pet-count-badge">2</span>
+              <span class="menu-arrow">›</span>
+            </div>
+            <div class="menu-item" onclick="showModal('modal-address')">
+              <div class="menu-icon purple">📍</div>
+              <div class="menu-text"><h4>我的地址</h4><p>管理常用服务地址</p></div>
+              <span class="menu-arrow">›</span>
+            </div>
+            <div class="menu-item" onclick="showModal('modal-coupons')">
+              <div class="menu-icon orange">🎫</div>
+              <div class="menu-text"><h4>我的优惠券</h4><p>3 张可用</p></div>
+              <span class="menu-badge" style="background: var(--accent);">3</span>
+              <span class="menu-arrow">›</span>
             </div>
           </div>
-        </div>
 
-        <!-- Helper Mode -->
-        <div id="helper-content" style="display: none;">
-          <div class="role-switch animate-in delay-2" id="role-switch-helper">
-            <div class="role-option" onclick="switchRole('owner', this)">我是宠主</div>
-            <div class="role-option active" onclick="switchRole('helper', this)">我想当帮手</div>
+          <div class="menu-group animate-in delay-3">
+            <div class="menu-item" onclick="showModal('modal-messages')">
+              <div class="menu-icon yellow">🔔</div>
+              <div class="menu-text"><h4>消息通知</h4><p>2 条新消息</p></div>
+              <span class="menu-badge">2</span>
+              <span class="menu-arrow">›</span>
+            </div>
+            <div class="menu-item" onclick="showModal('modal-support')">
+              <div class="menu-icon green">📞</div>
+              <div class="menu-text"><h4>联系客服</h4><p>工作日 9:00-18:00</p></div>
+              <span class="menu-arrow">›</span>
+            </div>
           </div>
 
-          <div class="page-content">
-            <div class="earnings-card animate-in delay-2">
-              <h3>本月收入</h3>
-              <div class="amount">¥8,420</div>
-              <p class="subtitle">已服务 28 单 · 待结算 ¥842</p>
-              <button class="withdraw-btn" onclick="showToast('提现申请已提交', 'success')">立即提现</button>
+          <div class="menu-group animate-in delay-4">
+            <div class="menu-item" onclick="showModal('modal-help')">
+              <div class="menu-icon blue">❓</div>
+              <div class="menu-text"><h4>帮助与反馈</h4><p>常见问题、联系客服</p></div>
+              <span class="menu-arrow">›</span>
             </div>
-
-            <div class="section-header animate-in delay-2" style="padding: 0 4px;">
-              <span class="section-title">可接订单</span>
-            </div>
-            <div id="helper-orders-list" class="animate-in delay-2"></div>
-
-            <div class="menu-group animate-in delay-3">
-              <div class="menu-item" onclick="showModal('modal-stats')">
-                <div class="menu-icon green">📊</div>
-                <div class="menu-text"><h4>服务统计</h4><p>查看收入报表</p></div>
-                <span class="menu-arrow">›</span>
-              </div>
-              <div class="menu-item" onclick="showModal('modal-certification')">
-                <div class="menu-icon orange">✅</div>
-                <div class="menu-text"><h4>资质认证</h4><p>已认证 · 狗狗、猫咪</p></div>
-                <span class="tag tag-success" style="margin-right: 8px;">已认证</span>
-                <span class="menu-arrow">›</span>
-              </div>
-              <div class="menu-item" onclick="showModal('modal-servicetime')">
-                <div class="menu-icon blue">🕐</div>
-                <div class="menu-text"><h4>服务时间</h4><p>设置可接单时段</p></div>
-                <span class="menu-arrow">›</span>
-              </div>
+            <div class="menu-item" onclick="showModal('modal-about')">
+              <div class="menu-icon purple">ℹ️</div>
+              <div class="menu-text"><h4>关于我们</h4><p>版本 1.0.0</p></div>
+              <span class="menu-arrow">›</span>
             </div>
           </div>
         </div>
@@ -1764,12 +1687,6 @@
       { id: '20260413038', status: 'completed', service: 'play', petId: 1, helperId: 4, date: '4月11日', time: '15:00-17:00', address: '阳光花城三期 7栋2单元', price: 55, progress: 4, rating: 4, proofPhotos: ['https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=300&h=300&fit=crop'] }
     ];
 
-    let helperRequests = [
-      { id: 'REQ001', service: 'walk', petName: '球球', petType: '🐕', ownerName: '张先生', community: '阳光花城二期', date: '今天', time: '14:00-16:00', price: 60, urgent: false },
-      { id: 'REQ002', service: 'feed', petName: '小黑', petType: '🐱', ownerName: '王阿姨', community: '阳光花城一期', date: '今天', time: '12:00-13:00', price: 45, urgent: true },
-      { id: 'REQ003', service: 'play', petName: '奶茶', petType: '🐱', ownerName: '陈太太', community: '阳光花城三期', date: '明天', time: '10:00-12:00', price: 55, urgent: false }
-    ];
-
     // ==================== STATE ====================
     let currentTab = 0;
     let selectedServiceType = 'walk';
@@ -1780,7 +1697,6 @@
     let selectedRating = 0;
     let selectedTip = 0;
     let currentOrderId = null;
-    let currentRole = 'owner';
     let currentOrderFilter = 'all';
     let newPetIcon = '🐕';
 
@@ -1810,7 +1726,6 @@
       if (index === 3) renderOrdersPage();
       if (index === 4) {
         updateMyStats();
-        if (currentRole === 'helper') renderHelperOrders();
       }
     }
 
@@ -2347,78 +2262,10 @@
     }
 
     // ==================== MY PAGE ====================
-    function switchRole(role, el) {
-      currentRole = role;
-      document.querySelectorAll('.role-option').forEach(o => o.classList.remove('active'));
-      el.classList.add('active');
-
-      if (role === 'owner') {
-        document.getElementById('owner-content').style.display = 'block';
-        document.getElementById('helper-content').style.display = 'none';
-      } else {
-        document.getElementById('owner-content').style.display = 'none';
-        document.getElementById('helper-content').style.display = 'block';
-        renderHelperOrders();
-      }
-    }
-
     function updateMyStats() {
       document.getElementById('stat-orders').textContent = orders.length;
       document.getElementById('stat-pets').textContent = pets.length;
       document.getElementById('pet-count-badge').textContent = pets.length;
-    }
-
-    function renderHelperOrders() {
-      const listEl = document.getElementById('helper-orders-list');
-
-      if (helperRequests.length === 0) {
-        listEl.innerHTML = `
-          <div class="empty-state" style="padding: 32px 16px;">
-            <div class="empty-icon" style="width: 70px; height: 70px; font-size: 32px; margin-bottom: 16px;">📋</div>
-            <h3 class="empty-title" style="font-size: 14px;">暂无可接订单</h3>
-            <p class="empty-desc" style="font-size: 12px;">暂无新的服务请求</p>
-          </div>
-        `;
-        return;
-      }
-
-      listEl.innerHTML = helperRequests.map(req => `
-        <div class="service-request-card ${req.urgent ? 'urgent' : ''}">
-          <div class="service-request-header">
-            <div class="service-request-type">
-              <span>${req.petType}</span>
-              <div>
-                <h4>${services[req.service].name}服务</h4>
-                <p>${req.petName} · ${req.ownerName}</p>
-              </div>
-            </div>
-            ${req.urgent ? '<span class="tag tag-danger">紧急</span>' : ''}
-          </div>
-          <div class="service-request-meta">
-            <span>📍 ${req.community}</span>
-            <span>📅 ${req.date} ${req.time}</span>
-          </div>
-          <div class="service-request-footer">
-            <span class="service-request-price">¥${req.price}</span>
-            <div class="service-request-actions">
-              <button class="btn btn-sm btn-secondary" onclick="rejectRequest('${req.id}')">拒绝</button>
-              <button class="btn btn-sm btn-primary" onclick="acceptRequest('${req.id}')">接单</button>
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function acceptRequest(reqId) {
-      helperRequests = helperRequests.filter(r => r.id !== reqId);
-      showToast('接单成功！', 'success');
-      renderHelperOrders();
-    }
-
-    function rejectRequest(reqId) {
-      helperRequests = helperRequests.filter(r => r.id !== reqId);
-      showToast('已拒绝');
-      renderHelperOrders();
     }
 
     // ==================== PETS ====================
