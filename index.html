@@ -1,0 +1,2544 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>毛孩子邻里 - 微信小程序原型</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #7BA05B;
+      --primary-light: #9BC27A;
+      --primary-dark: #5C8040;
+      --primary-bg: rgba(123, 160, 91, 0.08);
+      --accent: #F4A261;
+      --accent-light: #F7C59F;
+      --accent-bg: rgba(244, 162, 97, 0.1);
+      --danger: #E57373;
+      --danger-bg: rgba(229, 115, 115, 0.1);
+      --warning: #FFB74D;
+      --warning-bg: rgba(255, 183, 77, 0.1);
+      --success: #81C784;
+      --success-bg: rgba(129, 199, 132, 0.1);
+      --info: #64B5F6;
+      --info-bg: rgba(100, 181, 246, 0.1);
+      --purple: #BA68C8;
+      --purple-bg: rgba(186, 104, 200, 0.1);
+      --bg: #FDF8F3;
+      --bg-card: #FFFFFF;
+      --bg-secondary: #F5EDE4;
+      --text: #4A3728;
+      --text-light: #8B7355;
+      --text-muted: #B8A890;
+      --border: #E8DFD4;
+      --shadow: rgba(74, 55, 40, 0.08);
+      --shadow-lg: rgba(74, 55, 40, 0.15);
+      --radius: 20px;
+      --radius-sm: 12px;
+      --radius-xs: 8px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Noto Sans SC', 'Quicksand', -apple-system, sans-serif;
+      background: #1a1a1a;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px 0;
+    }
+
+    .phone-frame {
+      width: 375px;
+      height: 812px;
+      background: var(--bg);
+      border-radius: 40px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.4);
+    }
+
+    /* Status Bar */
+    .status-bar {
+      height: 44px;
+      background: var(--bg);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 0 24px 8px;
+      position: relative;
+      z-index: 100;
+    }
+
+    .status-time { position: absolute; left: 24px; bottom: 10px; font-size: 14px; font-weight: 600; }
+    .status-icons { position: absolute; right: 24px; bottom: 8px; display: flex; gap: 5px; align-items: center; }
+    .status-icons svg { width: 18px; height: 18px; }
+
+    /* Pages Container */
+    .pages-container { height: calc(100% - 44px - 84px); overflow: hidden; position: relative; }
+
+    .page {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--bg);
+      overflow-y: auto;
+      overflow-x: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+      transform: translateX(30px);
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .page.active { opacity: 1; pointer-events: auto; transform: translateX(0); }
+    .page.slide-left { transform: translateX(-100%); }
+
+    /* Scrollbar */
+    .page::-webkit-scrollbar { display: none; }
+
+    /* Tab Bar */
+    .tab-bar {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: calc(84px + var(--safe-bottom));
+      padding-bottom: var(--safe-bottom);
+      background: var(--bg-card);
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+      padding-top: 8px;
+      box-shadow: 0 -4px 24px var(--shadow);
+      z-index: 100;
+      border-radius: 24px 24px 0 0;
+    }
+
+    .tab-item {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 4px 16px; cursor: pointer; transition: all 0.2s;
+    }
+
+    .tab-item svg { width: 24px; height: 24px; color: var(--text-muted); transition: all 0.2s; }
+    .tab-item span { font-size: 10px; font-weight: 500; color: var(--text-muted); transition: all 0.2s; }
+    .tab-item.active svg { color: var(--primary); }
+    .tab-item.active span { color: var(--primary); font-weight: 600; }
+
+    /* Common Components */
+    .page-header { padding: 16px 20px 12px; position: sticky; top: 0; background: var(--bg); z-index: 50; }
+    .page-title { font-size: 24px; font-weight: 700; color: var(--text); font-family: 'Quicksand', sans-serif; }
+    .page-subtitle { font-size: 13px; color: var(--text-light); margin-top: 2px; }
+    .page-content { padding: 0 16px 100px; }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: 0 2px 16px var(--shadow);
+      margin-bottom: 14px;
+    }
+
+    .avatar {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-light), var(--accent));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; color: white; font-weight: 600; flex-shrink: 0;
+    }
+    .avatar.lg { width: 60px; height: 60px; font-size: 24px; }
+    .avatar.xl { width: 80px; height: 80px; font-size: 32px; }
+
+    .tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 500;
+    }
+    .tag-primary { background: var(--primary-bg); color: var(--primary-dark); }
+    .tag-accent { background: var(--accent-bg); color: #D4824A; }
+    .tag-success { background: var(--success-bg); color: #388E3C; }
+    .tag-warning { background: var(--warning-bg); color: #E65100; }
+    .tag-danger { background: var(--danger-bg); color: #C62828; }
+    .tag-info { background: var(--info-bg); color: #1976D2; }
+    .tag-purple { background: var(--purple-bg); color: #7B1FA2; }
+
+    .rating { display: flex; align-items: center; gap: 2px; }
+    .rating svg { width: 14px; height: 14px; color: var(--accent); fill: var(--accent); }
+    .rating-value { font-size: 13px; font-weight: 600; color: var(--text); margin-left: 4px; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 12px 24px; border-radius: 24px;
+      font-size: 14px; font-weight: 600; border: none; cursor: pointer;
+      transition: all 0.2s ease; font-family: inherit;
+    }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; box-shadow: 0 4px 16px rgba(123, 160, 91, 0.3); }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-secondary { background: var(--bg-secondary); color: var(--text); }
+    .btn-secondary:active { transform: scale(0.97); }
+    .btn-outline { background: transparent; border: 1.5px solid var(--primary); color: var(--primary); }
+    .btn-accent { background: linear-gradient(135deg, var(--accent), #E8895A); color: white; box-shadow: 0 4px 16px rgba(244, 162, 97, 0.3); }
+    .btn-accent:active { transform: scale(0.97); }
+    .btn-danger { background: linear-gradient(135deg, var(--danger), #EF5350); color: white; }
+    .btn-block { width: 100%; }
+    .btn-lg { padding: 16px 32px; font-size: 16px; border-radius: 28px; }
+    .btn-sm { padding: 8px 16px; font-size: 12px; border-radius: 20px; }
+
+    .input-group { margin-bottom: 16px; }
+    .input-label { font-size: 13px; font-weight: 500; color: var(--text-light); margin-bottom: 8px; display: block; }
+    .input {
+      width: 100%; padding: 14px 16px;
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 14px; font-family: inherit;
+      background: var(--bg); color: var(--text); transition: all 0.2s;
+    }
+    .input:focus { outline: none; border-color: var(--primary); background: var(--bg-card); }
+    .input::placeholder { color: var(--text-muted); }
+
+    /* Animations */
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+    .animate-in { animation: fadeInUp 0.4s ease forwards; }
+    .animate-fade { animation: fadeIn 0.3s ease forwards; }
+    .animate-scale { animation: scaleIn 0.3s ease forwards; }
+    .delay-1 { animation-delay: 0.05s; opacity: 0; }
+    .delay-2 { animation-delay: 0.1s; opacity: 0; }
+    .delay-3 { animation-delay: 0.15s; opacity: 0; }
+    .delay-4 { animation-delay: 0.2s; opacity: 0; }
+    .delay-5 { animation-delay: 0.25s; opacity: 0; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 80px; left: 50%; transform: translateX(-50%) translateY(-20px);
+      background: rgba(45, 52, 54, 0.95);
+      color: white; padding: 14px 28px; border-radius: 28px;
+      font-size: 14px; font-weight: 500;
+      opacity: 0; pointer-events: none; transition: all 0.3s ease;
+      z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      max-width: 320px; text-align: center;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.success { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); }
+    .toast.error { background: linear-gradient(135deg, var(--danger), #EF5350); }
+    .toast.warning { background: linear-gradient(135deg, var(--warning), #FFA000); }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 9000; display: flex; align-items: flex-end;
+      justify-content: center; opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .modal-overlay.show { opacity: 1; pointer-events: auto; }
+
+    .modal {
+      background: var(--bg-card);
+      border-radius: 28px 28px 0 0;
+      width: 375px;
+      max-height: 85vh;
+      overflow: hidden;
+      transform: translateY(100%);
+      transition: transform 0.35s ease;
+    }
+    .modal-overlay.show .modal { transform: translateY(0); }
+
+    .modal-header {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-title { font-size: 17px; font-weight: 700; color: var(--text); }
+    .modal-close { width: 32px; height: 32px; border-radius: 50%; background: var(--bg-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; color: var(--text-light); }
+    .modal-body { padding: 20px; overflow-y: auto; max-height: calc(85vh - 60px); }
+    .modal-footer { padding: 16px 20px; padding-bottom: calc(16px + var(--safe-bottom)); border-top: 1px solid var(--border); }
+
+    /* Badge */
+    .badge {
+      min-width: 18px; height: 18px; background: var(--accent);
+      border-radius: 9px; font-size: 10px; font-weight: 700;
+      color: white; display: flex; align-items: center; justify-content: center;
+      position: absolute; top: -4px; right: -4px; padding: 0 5px;
+    }
+
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    .status-dot.green { background: var(--primary); }
+    .status-dot.orange { background: var(--accent); }
+    .status-dot.red { background: var(--danger); }
+    .status-dot.gray { background: var(--text-muted); animation: none; }
+
+    /* Map Placeholder */
+    .map-container {
+      height: 160px; background: linear-gradient(135deg, #E8F5E3 0%, #C8E6C9 100%);
+      border-radius: var(--radius-sm); position: relative; overflow: hidden;
+    }
+    .map-container::before {
+      content: ''; position: absolute; inset: 0;
+      background-image: radial-gradient(circle, var(--primary-light) 1px, transparent 1px);
+      background-size: 20px 20px; opacity: 0.5;
+    }
+    .map-marker {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -100%);
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .map-marker-pulse {
+      width: 60px; height: 60px;
+      background: rgba(244, 162, 97, 0.2);
+      border-radius: 50%; animation: pulse 2s infinite;
+    }
+    .map-marker-dot {
+      width: 16px; height: 16px; background: var(--accent);
+      border-radius: 50%; border: 3px solid white;
+      box-shadow: 0 2px 8px rgba(244, 162, 97, 0.5);
+      margin-top: -12px;
+    }
+
+    /* ========================================
+       HOME PAGE
+       ======================================== */
+    .home-header { padding: 8px 20px 20px; }
+    .home-greeting { display: flex; align-items: center; justify-content: space-between; }
+    .greeting-text h1 { font-size: 22px; font-weight: 700; font-family: 'Quicksand', sans-serif; color: var(--text); }
+    .greeting-text p { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+    .notification-btn {
+      width: 44px; height: 44px; background: var(--bg-card);
+      border-radius: 14px; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 12px var(--shadow); cursor: pointer; position: relative;
+    }
+    .notification-btn svg { width: 22px; height: 22px; color: var(--text-light); }
+
+    .quick-actions { display: flex; gap: 12px; margin-bottom: 24px; }
+    .quick-action {
+      flex: 1; padding: 18px 12px; background: var(--bg-card);
+      border-radius: var(--radius); text-align: center;
+      box-shadow: 0 2px 16px var(--shadow); cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .quick-action:active { transform: scale(0.96); }
+    .quick-action-icon {
+      width: 52px; height: 52px; margin: 0 auto 10px;
+      border-radius: 16px; display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+    }
+    .quick-action-icon.dog { background: linear-gradient(135deg, #FEF3E6, #FDE0C3); }
+    .quick-action-icon.cat { background: linear-gradient(135deg, #E8F5E9, #C8E6C9); }
+    .quick-action-icon.emergency { background: linear-gradient(135deg, #FFEBEE, #FFCDD2); }
+    .quick-action h3 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+    .quick-action p { font-size: 11px; color: var(--text-muted); }
+
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding: 0 4px; }
+    .section-title { font-size: 16px; font-weight: 700; color: var(--text); font-family: 'Quicksand', sans-serif; }
+    .section-link { font-size: 12px; color: var(--primary); font-weight: 600; cursor: pointer; }
+
+    .helper-scroll {
+      display: flex; gap: 14px;
+      overflow-x: auto; scrollbar-width: none; margin-bottom: 24px;
+    }
+    .helper-scroll::-webkit-scrollbar { display: none; }
+    .helper-scroll-item {
+      flex-shrink: 0; width: 130px; padding: 16px 12px;
+      background: var(--bg-card); border-radius: var(--radius);
+      text-align: center; box-shadow: 0 2px 16px var(--shadow);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .helper-scroll-item:active { transform: scale(0.96); }
+    .helper-scroll-item .avatar { margin: 0 auto 10px; }
+    .helper-scroll-item h4 { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .helper-scroll-item p { font-size: 11px; color: var(--text-muted); }
+
+    /* Order Card */
+    .order-card-mini {
+      background: var(--bg-card); border-radius: var(--radius);
+      padding: 16px; box-shadow: 0 2px 16px var(--shadow);
+      margin-bottom: 14px; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .order-card-mini:active { transform: scale(0.98); }
+    .order-service-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 14px; background: var(--bg-secondary);
+      border-radius: 20px; margin-bottom: 12px;
+    }
+    .order-service-badge span:first-child { font-size: 20px; }
+    .order-service-badge span:last-child { font-size: 13px; font-weight: 600; color: var(--text); }
+    .order-meta { display: flex; align-items: center; justify-content: space-between; }
+    .order-meta-left { display: flex; align-items: center; gap: 8px; }
+    .order-meta-left .avatar { width: 28px; height: 28px; font-size: 12px; }
+    .order-meta-left span { font-size: 12px; color: var(--text-light); }
+    .order-status-badge { display: flex; align-items: center; gap: 6px; }
+    .order-status-badge .status-dot { width: 6px; height: 6px; }
+
+    /* ========================================
+       HELPERS PAGE
+       ======================================== */
+    .search-bar {
+      display: flex; gap: 10px; align-items: center;
+      background: var(--bg-card); padding: 12px 16px;
+      border-radius: 24px; box-shadow: 0 2px 12px var(--shadow);
+      margin-bottom: 14px;
+    }
+    .search-bar svg { width: 20px; height: 20px; color: var(--text-muted); flex-shrink: 0; }
+    .search-bar input { flex: 1; border: none; background: transparent; font-size: 14px; font-family: inherit; color: var(--text); }
+    .search-bar input::placeholder { color: var(--text-muted); }
+    .search-bar input:focus { outline: none; }
+
+    .filter-tabs { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; margin-bottom: 16px; }
+    .filter-tabs::-webkit-scrollbar { display: none; }
+    .filter-tab {
+      flex-shrink: 0; padding: 8px 16px;
+      background: var(--bg-card); border-radius: 20px;
+      font-size: 12px; font-weight: 500; color: var(--text-light);
+      cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 6px var(--shadow);
+    }
+    .filter-tab.active { background: var(--primary); color: white; }
+
+    .helper-card {
+      display: flex; gap: 14px; padding: 16px;
+      background: var(--bg-card); border-radius: var(--radius);
+      box-shadow: 0 2px 16px var(--shadow); margin-bottom: 14px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .helper-card:active { transform: scale(0.98); }
+    .helper-info { flex: 1; }
+    .helper-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+    .helper-name { font-size: 15px; font-weight: 600; color: var(--text); }
+    .helper-meta { font-size: 12px; color: var(--text-light); margin-bottom: 8px; }
+    .helper-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .helper-stats { display: flex; gap: 16px; align-items: center; margin-top: 8px; }
+    .helper-distance { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+
+    /* ========================================
+       PUBLISH PAGE
+       ======================================== */
+    .service-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .service-item {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      padding: 16px 8px; background: var(--bg-card);
+      border-radius: var(--radius); cursor: pointer;
+      transition: all 0.25s ease; box-shadow: 0 2px 12px var(--shadow);
+      border: 2px solid transparent;
+    }
+    .service-item:active { transform: scale(0.95); }
+    .service-item.selected { border-color: var(--primary); background: var(--primary-bg); }
+    .service-icon { width: 48px; height: 48px; border-radius: 14px; background: var(--bg-secondary); display: flex; align-items: center; justify-content: center; font-size: 24px; transition: all 0.25s; }
+    .service-item.selected .service-icon { background: var(--primary); }
+    .service-name { font-size: 12px; font-weight: 500; color: var(--text); transition: all 0.25s; }
+    .service-item.selected .service-name { color: var(--primary-dark); font-weight: 600; }
+
+    .pet-selector { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; margin-bottom: 20px; padding: 0 4px; }
+    .pet-selector::-webkit-scrollbar { display: none; }
+    .pet-option {
+      flex-shrink: 0; width: 100px; padding: 14px;
+      background: var(--bg-card); border-radius: var(--radius-sm);
+      text-align: center; border: 2px solid transparent;
+      cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 10px var(--shadow);
+    }
+    .pet-option:active { transform: scale(0.95); }
+    .pet-option.selected { border-color: var(--primary); background: var(--primary-bg); }
+    .pet-option-icon { width: 48px; height: 48px; margin: 0 auto 8px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; }
+    .pet-option.dog .pet-option-icon { background: #FEF3E6; }
+    .pet-option.cat .pet-option-icon { background: #E8F5E9; }
+    .pet-option.other .pet-option-icon { background: #F3E5F5; }
+    .pet-option h4 { font-size: 13px; font-weight: 600; color: var(--text); }
+    .pet-option p { font-size: 11px; color: var(--text-muted); }
+
+    .time-selector { display: flex; gap: 10px; margin-bottom: 20px; }
+    .time-option {
+      flex: 1; padding: 14px 8px; background: var(--bg-card);
+      border-radius: var(--radius-sm); text-align: center;
+      border: 2px solid transparent; cursor: pointer;
+      transition: all 0.2s; box-shadow: 0 2px 10px var(--shadow);
+    }
+    .time-option:active { transform: scale(0.95); }
+    .time-option.selected { border-color: var(--primary); background: var(--primary-bg); }
+    .time-option h4 { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+    .time-option.selected h4 { color: var(--primary-dark); }
+    .time-option p { font-size: 11px; color: var(--text-muted); }
+
+    .price-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .price-chip {
+      padding: 8px 14px; background: var(--bg-secondary);
+      border-radius: 20px; font-size: 12px; font-weight: 500;
+      color: var(--text-light); cursor: pointer;
+      transition: all 0.2s; border: 1.5px solid transparent;
+    }
+    .price-chip:active { transform: scale(0.95); }
+    .price-chip.selected { background: var(--primary-bg); border-color: var(--primary); color: var(--primary-dark); }
+
+    .submit-section {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 375px;
+      padding: 16px 20px calc(24px + var(--safe-bottom));
+      background: linear-gradient(180deg, transparent 0%, var(--bg) 30%);
+      z-index: 50;
+    }
+    .price-estimate { text-align: center; margin-bottom: 12px; }
+    .price-estimate span { font-size: 12px; color: var(--text-muted); }
+    .price-estimate strong { font-size: 28px; color: var(--primary); font-family: 'Quicksand', sans-serif; }
+
+    /* ========================================
+       ORDER DETAIL PAGE
+       ======================================== */
+    .order-detail-status {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 24px; text-align: center;
+    }
+    .order-detail-status .status-dot { width: 12px; height: 12px; margin-bottom: 8px; }
+    .order-detail-status span { font-size: 14px; font-weight: 600; color: var(--primary); }
+
+    .timeline { padding: 0 4px; }
+    .timeline-item { display: flex; gap: 14px; padding-bottom: 24px; position: relative; }
+    .timeline-item::before { content: ''; position: absolute; left: 11px; top: 24px; bottom: 0; width: 2px; background: var(--border); }
+    .timeline-item:last-child::before { display: none; }
+    .timeline-dot { width: 24px; height: 24px; border-radius: 50%; background: var(--bg-secondary); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 1; font-size: 10px; }
+    .timeline-dot.active { background: var(--primary); border-color: var(--primary); color: white; animation: pulse 2s infinite; }
+    .timeline-dot.done { background: var(--primary-light); border-color: var(--primary); color: white; }
+    .timeline-dot.pending { background: var(--bg-secondary); border-color: var(--border); color: var(--text-muted); }
+    .timeline-content { padding-top: 2px; }
+    .timeline-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+    .timeline-time { font-size: 11px; color: var(--text-muted); }
+
+    .info-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { font-size: 13px; color: var(--text-light); }
+    .info-value { font-size: 13px; font-weight: 600; color: var(--text); }
+    .info-value.primary { color: var(--primary); }
+    .info-value.accent { color: var(--accent); }
+
+    /* ========================================
+       MY PAGE
+       ======================================== */
+    .profile-header { padding: 24px 20px; text-align: center; background: linear-gradient(180deg, var(--bg) 0%, var(--bg) 70%, transparent 100%); }
+    .profile-avatar { width: 86px; height: 86px; margin: 0 auto 14px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-light), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 36px; color: white; font-weight: 600; box-shadow: 0 6px 24px rgba(123, 160, 91, 0.35); position: relative; }
+    .profile-avatar .edit-badge { position: absolute; bottom: 2px; right: 2px; width: 26px; height: 26px; background: var(--bg-card); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px var(--shadow); font-size: 12px; }
+    .profile-name { font-size: 20px; font-weight: 700; color: var(--text); font-family: 'Quicksand', sans-serif; margin-bottom: 4px; }
+    .profile-meta { font-size: 13px; color: var(--text-light); margin-bottom: 16px; }
+    .profile-stats { display: flex; justify-content: center; gap: 40px; }
+    .profile-stat { text-align: center; }
+    .profile-stat-value { font-size: 20px; font-weight: 700; color: var(--primary); font-family: 'Quicksand', sans-serif; }
+    .profile-stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    .role-switch { display: flex; background: var(--bg-secondary); padding: 4px; border-radius: 24px; margin: 0 16px 20px; }
+    .role-option { flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: 600; color: var(--text-light); border-radius: 20px; cursor: pointer; transition: all 0.2s; }
+    .role-option.active { background: var(--bg-card); color: var(--primary); box-shadow: 0 2px 8px var(--shadow); }
+
+    .menu-group { background: var(--bg-card); border-radius: var(--radius); margin-bottom: 12px; overflow: hidden; box-shadow: 0 2px 12px var(--shadow); }
+    .menu-item { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-bottom: 1px solid var(--border); cursor: pointer; transition: all 0.15s; }
+    .menu-item:last-child { border-bottom: none; }
+    .menu-item:active { background: var(--bg-secondary); }
+    .menu-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .menu-icon.green { background: #E8F5E9; }
+    .menu-icon.orange { background: #FFF3E6; }
+    .menu-icon.blue { background: #E3F2FD; }
+    .menu-icon.purple { background: #F3E5F5; }
+    .menu-icon.red { background: #FFEBEE; }
+    .menu-icon.yellow { background: #FFFDE7; }
+    .menu-text { flex: 1; }
+    .menu-text h4 { font-size: 14px; font-weight: 500; color: var(--text); }
+    .menu-text p { font-size: 11px; color: var(--text-muted); }
+    .menu-arrow { color: var(--text-muted); font-size: 18px; }
+    .menu-badge { background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+
+    /* ========================================
+       HELPER MODE
+       ======================================== */
+    .earnings-card { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; position: relative; overflow: hidden; }
+    .earnings-card::before { content: ''; position: absolute; top: -20px; right: -20px; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%; }
+    .earnings-card h3 { font-size: 13px; color: rgba(255,255,255,0.8); margin-bottom: 8px; }
+    .earnings-card .amount { font-size: 36px; font-weight: 700; color: white; font-family: 'Quicksand', sans-serif; margin-bottom: 4px; }
+    .earnings-card .subtitle { font-size: 12px; color: rgba(255,255,255,0.7); }
+    .earnings-card .withdraw-btn { position: absolute; top: 20px; right: 20px; padding: 8px 16px; background: rgba(255,255,255,0.2); border-radius: 20px; font-size: 12px; font-weight: 600; color: white; cursor: pointer; border: none; }
+
+    .service-request-card { background: var(--bg-card); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 12px var(--shadow); margin-bottom: 14px; cursor: pointer; transition: all 0.2s; border-left: 4px solid var(--primary); }
+    .service-request-card:active { transform: scale(0.98); }
+    .service-request-card.urgent { border-left-color: var(--danger); }
+    .service-request-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .service-request-type { display: flex; align-items: center; gap: 10px; }
+    .service-request-type span:first-child { font-size: 28px; }
+    .service-request-type h4 { font-size: 15px; font-weight: 600; color: var(--text); }
+    .service-request-type p { font-size: 12px; color: var(--text-light); }
+    .service-request-meta { display: flex; gap: 16px; margin-bottom: 12px; }
+    .service-request-meta span { font-size: 12px; color: var(--text-light); display: flex; align-items: center; gap: 4px; }
+    .service-request-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--border); }
+    .service-request-price { font-size: 18px; font-weight: 700; color: var(--primary); font-family: 'Quicksand', sans-serif; }
+    .service-request-actions { display: flex; gap: 8px; }
+
+    /* ========================================
+       EMPTY STATE
+       ======================================== */
+    .empty-state { text-align: center; padding: 48px 24px; }
+    .empty-icon { width: 100px; height: 100px; margin: 0 auto 20px; background: var(--bg-secondary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 48px; }
+    .empty-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+    .empty-desc { font-size: 13px; color: var(--text-light); margin-bottom: 20px; }
+
+    /* ========================================
+       MODALS
+       ======================================== */
+    .helper-modal-avatar { display: flex; flex-direction: column; align-items: center; padding: 20px 0; }
+    .helper-modal-avatar .avatar.xl { margin-bottom: 12px; }
+    .helper-modal-avatar h3 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .helper-modal-avatar p { font-size: 13px; color: var(--text-light); margin-bottom: 12px; }
+    .helper-modal-stats { display: flex; gap: 32px; justify-content: center; margin-bottom: 16px; }
+    .helper-modal-stat { text-align: center; }
+    .helper-modal-stat-value { font-size: 18px; font-weight: 700; color: var(--primary); font-family: 'Quicksand', sans-serif; }
+    .helper-modal-stat-label { font-size: 11px; color: var(--text-muted); }
+    .helper-modal-tags { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
+    .helper-modal-section { margin-bottom: 16px; }
+    .helper-modal-section h4 { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+    .helper-modal-section p { font-size: 13px; color: var(--text-light); line-height: 1.6; }
+
+    .confirm-service { display: flex; align-items: center; gap: 14px; padding: 14px; background: var(--bg-secondary); border-radius: var(--radius-sm); margin-bottom: 16px; }
+    .confirm-service-icon { width: 50px; height: 50px; background: linear-gradient(135deg, var(--primary-light), var(--primary)); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; }
+    .confirm-service-info h4 { font-size: 15px; font-weight: 600; color: var(--text); }
+    .confirm-service-info p { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+    .confirm-detail { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .confirm-detail:last-of-type { border-bottom: none; }
+    .confirm-detail span:first-child { color: var(--text-light); }
+    .confirm-detail span:last-child { color: var(--text); font-weight: 500; }
+    .confirm-price { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-top: 2px solid var(--border); margin-top: 8px; }
+    .confirm-price span:first-child { font-size: 14px; font-weight: 600; color: var(--text); }
+    .confirm-price span:last-child { font-size: 22px; font-weight: 700; color: var(--primary); font-family: 'Quicksand', sans-serif; }
+
+    .rating-stars { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
+    .rating-star { font-size: 36px; cursor: pointer; transition: all 0.2s; color: var(--border); }
+    .rating-star.active { color: var(--accent); transform: scale(1.1); }
+    .rating-star:hover { color: var(--accent); transform: scale(1.15); }
+    .rating-label { text-align: center; font-size: 14px; color: var(--text-light); margin-bottom: 16px; }
+    .review-text { width: 100%; padding: 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; resize: none; height: 100px; }
+    .review-text:focus { outline: none; border-color: var(--primary); }
+    .tip-options { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+    .tip-option { padding: 10px 20px; background: var(--bg-secondary); border-radius: 20px; font-size: 13px; font-weight: 600; color: var(--text-light); cursor: pointer; transition: all 0.2s; border: 1.5px solid transparent; }
+    .tip-option:active { transform: scale(0.95); }
+    .tip-option.selected { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+
+    .pet-type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+    .pet-type-item { padding: 20px 12px; background: var(--bg-card); border-radius: var(--radius-sm); text-align: center; border: 2px solid transparent; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px var(--shadow); }
+    .pet-type-item:active { transform: scale(0.95); }
+    .pet-type-item.selected { border-color: var(--primary); background: var(--primary-bg); }
+    .pet-type-item span:first-child { font-size: 36px; display: block; margin-bottom: 8px; }
+    .pet-type-item span:last-child { font-size: 13px; font-weight: 600; color: var(--text); }
+
+    .time-slots { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 16px; }
+    .time-slot { padding: 12px; background: var(--bg-card); border-radius: var(--radius-sm); text-align: center; font-size: 13px; font-weight: 500; color: var(--text); cursor: pointer; transition: all 0.2s; border: 1.5px solid var(--border); }
+    .time-slot:active { transform: scale(0.95); }
+    .time-slot.selected { border-color: var(--primary); background: var(--primary-bg); color: var(--primary-dark); }
+
+    /* ========================================
+       ORDER LIST FILTER TABS
+       ======================================== */
+    .order-filter-bar { display: flex; background: var(--bg-secondary); padding: 4px; border-radius: 20px; margin-bottom: 20px; }
+    .order-filter-btn { flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: 600; color: var(--text-light); border-radius: 16px; cursor: pointer; transition: all 0.2s; }
+    .order-filter-btn.active { background: var(--bg-card); color: var(--primary); box-shadow: 0 2px 6px var(--shadow); }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span class="status-time">9:41</span>
+      <span style="position: absolute; left: 50%; transform: translateX(-50%); font-size: 12px; font-weight: 600;">毛孩子邻里</span>
+      <div class="status-icons">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C10.34 3 9 4.37 9 6.07V11.93C9 13.63 10.34 15 12 15C13.66 15 15 13.63 15 11.93V6.07C15 4.37 13.66 3 12 3Z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+      </div>
+    </div>
+
+    <div class="pages-container">
+      <!-- ========== PAGE 0: HOME ========== -->
+      <div class="page active" id="page-home">
+        <div class="home-header">
+          <div class="home-greeting">
+            <div class="greeting-text">
+              <h1>早上好，喵喵 🐱</h1>
+              <p>阳光花城三期 · 成都市</p>
+            </div>
+            <div class="notification-btn" onclick="showToast('您有 3 条新消息', 'success')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <span class="badge">3</span>
+            </div>
+          </div>
+        </div>
+        <div class="page-content">
+          <div class="quick-actions animate-in delay-1">
+            <div class="quick-action" onclick="goToPublish('walk')">
+              <div class="quick-action-icon dog">🐕</div>
+              <h3>遛狗</h3>
+              <p>出门运动</p>
+            </div>
+            <div class="quick-action" onclick="goToPublish('feed')">
+              <div class="quick-action-icon cat">🐱</div>
+              <h3>喂猫</h3>
+              <p>定时投喂</p>
+            </div>
+            <div class="quick-action" onclick="showEmergencyModal()">
+              <div class="quick-action-icon emergency">⚡</div>
+              <h3>急事</h3>
+              <p>紧急求助</p>
+            </div>
+          </div>
+
+          <div class="section-header animate-in delay-2">
+            <span class="section-title">进行中的订单</span>
+            <span class="section-link" onclick="switchTab(3)">查看全部 ›</span>
+          </div>
+          <div id="home-orders" class="animate-in delay-2"></div>
+
+          <div class="section-header animate-in delay-3">
+            <span class="section-title">附近靠谱帮手</span>
+            <span class="section-link" onclick="switchTab(1)">更多 ›</span>
+          </div>
+          <div class="helper-scroll animate-in delay-3" id="home-helpers"></div>
+
+          <div class="section-header animate-in delay-4">
+            <span class="section-title">常用服务</span>
+          </div>
+          <div class="card animate-in delay-4">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; text-align: center;">
+              <div onclick="goToPublish('walk')" style="cursor: pointer;">
+                <div style="width: 50px; height: 50px; background: #FEF3E6; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; margin: 0 auto 8px;">🐕</div>
+                <span style="font-size: 12px; color: var(--text);">遛狗</span>
+              </div>
+              <div onclick="goToPublish('feed')" style="cursor: pointer;">
+                <div style="width: 50px; height: 50px; background: #E8F5E9; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; margin: 0 auto 8px;">🐱</div>
+                <span style="font-size: 12px; color: var(--text);">喂猫</span>
+              </div>
+              <div onclick="goToPublish('play')" style="cursor: pointer;">
+                <div style="width: 50px; height: 50px; background: #F3E5F5; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; margin: 0 auto 8px;">🎾</div>
+                <span style="font-size: 12px; color: var(--text);">陪玩</span>
+              </div>
+              <div onclick="goToPublish('clean')" style="cursor: pointer;">
+                <div style="width: 50px; height: 50px; background: #E3F2FD; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; margin: 0 auto 8px;">🧹</div>
+                <span style="font-size: 12px; color: var(--text);">清洁</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== PAGE 1: HELPERS ========== -->
+      <div class="page" id="page-helpers">
+        <div class="page-header">
+          <span class="page-title">发现帮手</span>
+          <p class="page-subtitle">找到你信任的邻里宠伴</p>
+        </div>
+        <div class="page-content">
+          <div class="search-bar animate-in delay-1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="搜索帮手姓名或关键词" id="helper-search" oninput="renderHelpers()">
+          </div>
+          <div class="filter-tabs animate-in delay-1" id="helper-filters">
+            <div class="filter-tab active" onclick="filterHelpers('all', this)">综合</div>
+            <div class="filter-tab" onclick="filterHelpers('nearby', this)">离我最近</div>
+            <div class="filter-tab" onclick="filterHelpers('rating', this)">评分最高</div>
+            <div class="filter-tab" onclick="filterHelpers('urgent', this)">可接急单</div>
+          </div>
+          <div id="helpers-list"></div>
+        </div>
+      </div>
+
+      <!-- ========== PAGE 2: PUBLISH ========== -->
+      <div class="page" id="page-publish">
+        <div class="page-header">
+          <span class="page-title">发布需求</span>
+          <p class="page-subtitle">选择你需要的服务</p>
+        </div>
+        <div class="page-content" style="padding-bottom: 160px;">
+          <div class="section-header" style="padding: 0 4px; margin-bottom: 12px;">
+            <span class="section-title" style="font-size: 14px;">选择服务类型</span>
+          </div>
+          <div class="service-grid animate-in delay-1">
+            <div class="service-item selected" data-service="walk" onclick="selectService(this, 'walk')">
+              <div class="service-icon"><span>🐕</span></div>
+              <span class="service-name">遛狗</span>
+            </div>
+            <div class="service-item" data-service="feed" onclick="selectService(this, 'feed')">
+              <div class="service-icon"><span>🐱</span></div>
+              <span class="service-name">喂猫</span>
+            </div>
+            <div class="service-item" data-service="play" onclick="selectService(this, 'play')">
+              <div class="service-icon"><span>🎾</span></div>
+              <span class="service-name">陪玩</span>
+            </div>
+            <div class="service-item" data-service="clean" onclick="selectService(this, 'clean')">
+              <div class="service-icon"><span>🧹</span></div>
+              <span class="service-name">清洁</span>
+            </div>
+          </div>
+
+          <div class="card animate-in delay-2">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <span class="section-title" style="font-size: 14px;">选择宠物</span>
+              <span class="section-link" onclick="showAddPetModal()">+ 添加宠物</span>
+            </div>
+            <div class="pet-selector" id="pet-selector"></div>
+          </div>
+
+          <div class="card animate-in delay-3">
+            <div style="margin-bottom: 14px;">
+              <span class="section-title" style="font-size: 14px;">选择日期</span>
+            </div>
+            <div class="time-selector" id="date-selector">
+              <div class="time-option selected" data-date="today" onclick="selectDate(this, 'today')">
+                <h4>今天</h4><p>4月13日</p>
+              </div>
+              <div class="time-option" data-date="tomorrow" onclick="selectDate(this, 'tomorrow')">
+                <h4>明天</h4><p>4月14日</p>
+              </div>
+              <div class="time-option" data-date="weekend" onclick="selectDate(this, 'weekend')">
+                <h4>周末</h4><p>4月15-16日</p>
+              </div>
+            </div>
+            <div class="time-slots" id="time-slots">
+              <div class="time-slot" onclick="selectTimeSlot(this, '08:00-10:00')">上午 8:00-10:00</div>
+              <div class="time-slot" onclick="selectTimeSlot(this, '10:00-12:00')">上午 10:00-12:00</div>
+              <div class="time-slot selected" onclick="selectTimeSlot(this, '14:00-16:00')">下午 14:00-16:00</div>
+              <div class="time-slot" onclick="selectTimeSlot(this, '16:00-18:00')">下午 16:00-18:00</div>
+            </div>
+          </div>
+
+          <div class="card animate-in delay-4">
+            <div style="margin-bottom: 14px;">
+              <span class="section-title" style="font-size: 14px;">服务地址</span>
+            </div>
+            <div class="input-group">
+              <label class="input-label">小区 / 地址</label>
+              <input class="input" type="text" value="阳光花城三期 7栋2单元" id="service-address">
+            </div>
+            <div class="input-group" style="margin-bottom: 0;">
+              <label class="input-label">备注（可选）</label>
+              <input class="input" type="text" placeholder="如：门禁密码、宠物注意事项等" id="service-note">
+            </div>
+          </div>
+
+          <div class="card animate-in delay-5">
+            <div style="margin-bottom: 14px;">
+              <span class="section-title" style="font-size: 14px;">设置预算</span>
+            </div>
+            <div class="input-group">
+              <label class="input-label">期望价格（元 / 次）</label>
+              <input class="input" type="number" value="60" id="service-budget">
+            </div>
+            <div class="price-chips">
+              <div class="price-chip" onclick="selectPriceChip(this, 30)">¥30-50</div>
+              <div class="price-chip selected" onclick="selectPriceChip(this, 60)">¥50-80</div>
+              <div class="price-chip" onclick="selectPriceChip(this, 90)">¥80-100</div>
+              <div class="price-chip" onclick="selectPriceChip(this, 120)">¥100以上</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="submit-section">
+          <div class="price-estimate">
+            <span>预计费用 </span>
+            <strong id="total-price">¥60</strong>
+            <span> / 次</span>
+          </div>
+          <button class="btn btn-accent btn-lg btn-block" onclick="showConfirmModal()">立即发布</button>
+        </div>
+      </div>
+
+      <!-- ========== PAGE 3: ORDERS ========== -->
+      <div class="page" id="page-orders">
+        <div class="page-header">
+          <span class="page-title">我的订单</span>
+        </div>
+        <div class="page-content">
+          <div class="order-filter-bar animate-in delay-1" id="order-filter-bar">
+            <div class="order-filter-btn active" onclick="switchOrderFilter('all', this)">全部</div>
+            <div class="order-filter-btn" onclick="switchOrderFilter('ongoing', this)">进行中</div>
+            <div class="order-filter-btn" onclick="switchOrderFilter('completed', this)">已完成</div>
+          </div>
+          <div id="orders-list"></div>
+        </div>
+      </div>
+
+      <!-- ========== PAGE 4: MY ========== -->
+      <div class="page" id="page-my">
+        <div class="profile-header animate-in delay-1">
+          <div class="profile-avatar" onclick="showToast('编辑资料')">
+            <span>喵</span>
+            <div class="edit-badge">✏️</div>
+          </div>
+          <h2 class="profile-name">喵喵</h2>
+          <p class="profile-meta">🐱 阳光花城三期 · 已认证宠主</p>
+          <div class="profile-stats">
+            <div class="profile-stat">
+              <div class="profile-stat-value" id="stat-orders">12</div>
+              <div class="profile-stat-label">发布订单</div>
+            </div>
+            <div class="profile-stat">
+              <div class="profile-stat-value" id="stat-pets">2</div>
+              <div class="profile-stat-label">我的宠物</div>
+            </div>
+            <div class="profile-stat">
+              <div class="profile-stat-value">286</div>
+              <div class="profile-stat-label">积分</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Owner Mode -->
+        <div id="owner-content">
+          <div class="role-switch animate-in delay-2" id="role-switch">
+            <div class="role-option active" onclick="switchRole('owner', this)">我是宠主</div>
+            <div class="role-option" onclick="switchRole('helper', this)">我想当帮手</div>
+          </div>
+
+          <div class="page-content">
+            <div class="menu-group animate-in delay-2">
+              <div class="menu-item" onclick="switchTab(3)">
+                <div class="menu-icon green">📋</div>
+                <div class="menu-text"><h4>我的订单</h4><p>查看所有订单记录</p></div>
+                <span class="menu-arrow">›</span>
+              </div>
+              <div class="menu-item" onclick="showToast('钱包功能开发中')">
+                <div class="menu-icon orange">💰</div>
+                <div class="menu-text"><h4>我的钱包</h4><p>余额 ¥128.50</p></div>
+                <span class="menu-arrow">›</span>
+              </div>
+              <div class="menu-item" onclick="showPetsModal()">
+                <div class="menu-icon blue">🐾</div>
+                <div class="menu-text"><h4>我的宠物</h4><p>管理宠物档案</p></div>
+                <span class="menu-badge" id="pet-count-badge">2</span>
+                <span class="menu-arrow">›</span>
+              </div>
+              <div class="menu-item" onclick="showModal('modal-address')">
+                <div class="menu-icon purple">📍</div>
+                <div class="menu-text"><h4>我的地址</h4><p>管理常用服务地址</p></div>
+                <span class="menu-arrow">›</span>
+              </div>
+              <div class="menu-item" onclick="showModal('modal-coupons')">
+                <div class="menu-icon orange">🎫</div>
+                <div class="menu-text"><h4>我的优惠券</h4><p>3 张可用</p></div>
+                <span class="menu-badge" style="background: var(--accent);">3</span>
+                <span class="menu-arrow">›</span>
+              </div>
+            </div>
+
+            <div class="menu-group animate-in delay-3">
+              <div class="menu-item" onclick="showModal('modal-messages')">
+                <div class="menu-icon yellow">🔔</div>
+                <div class="menu-text"><h4>消息通知</h4><p>2 条新消息</p></div>
+                <span class="menu-badge">2</span>
+                <span class="menu-arrow">›</span>
+              </div>
+              <div class="menu-item" onclick="showModal('modal-support')">
+                <div class="menu-icon green">📞</div>
+                <div class="menu-text"><h4>联系客服</h4><p>工作日 9:00-18:00</p></div>
+                <span class="menu-arrow">›</span>
+              </div>
+            </div>
+
+            <div class="menu-group animate-in delay-4">
+              <div class="menu-item" onclick="showModal('modal-help')">
+                <div class="menu-icon blue">❓</div>
+                <div class="menu-text"><h4>帮助与反馈</h4><p>常见问题、联系客服</p></div>
+                <span class="menu-arrow">›</span>
+              </div>
+              <div class="menu-item" onclick="showModal('modal-about')">
+                <div class="menu-icon purple">ℹ️</div>
+                <div class="menu-text"><h4>关于我们</h4><p>版本 1.0.0</p></div>
+                <span class="menu-arrow">›</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Helper Mode -->
+        <div id="helper-content" style="display: none;">
+          <div class="role-switch animate-in delay-2" id="role-switch-helper">
+            <div class="role-option" onclick="switchRole('owner', this)">我是宠主</div>
+            <div class="role-option active" onclick="switchRole('helper', this)">我想当帮手</div>
+          </div>
+
+          <div class="page-content">
+            <div class="earnings-card animate-in delay-2">
+              <h3>本月收入</h3>
+              <div class="amount">¥8,420</div>
+              <p class="subtitle">已服务 28 单 · 待结算 ¥842</p>
+              <button class="withdraw-btn" onclick="showToast('提现申请已提交', 'success')">立即提现</button>
+            </div>
+
+            <div class="section-header animate-in delay-2" style="padding: 0 4px;">
+              <span class="section-title">可接订单</span>
+            </div>
+            <div id="helper-orders-list" class="animate-in delay-2"></div>
+
+            <div class="menu-group animate-in delay-3">
+              <div class="menu-item" onclick="showModal('modal-stats')">
+                <div class="menu-icon green">📊</div>
+                <div class="menu-text"><h4>服务统计</h4><p>查看收入报表</p></div>
+                <span class="menu-arrow">›</span>
+              </div>
+              <div class="menu-item" onclick="showModal('modal-certification')">
+                <div class="menu-icon orange">✅</div>
+                <div class="menu-text"><h4>资质认证</h4><p>已认证 · 狗狗、猫咪</p></div>
+                <span class="tag tag-success" style="margin-right: 8px;">已认证</span>
+                <span class="menu-arrow">›</span>
+              </div>
+              <div class="menu-item" onclick="showModal('modal-servicetime')">
+                <div class="menu-icon blue">🕐</div>
+                <div class="menu-text"><h4>服务时间</h4><p>设置可接单时段</p></div>
+                <span class="menu-arrow">›</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <div class="tab-item active" data-tab="0" onclick="switchTab(0)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>首页</span>
+      </div>
+      <div class="tab-item" data-tab="1" onclick="switchTab(1)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>发现</span>
+      </div>
+      <div class="tab-item" data-tab="2" onclick="switchTab(2)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>发布</span>
+      </div>
+      <div class="tab-item" data-tab="3" onclick="switchTab(3)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span>订单</span>
+      </div>
+      <div class="tab-item" data-tab="4" onclick="switchTab(4)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>我的</span>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Modal Overlay -->
+    <div class="modal-overlay" id="modal-overlay">
+      <!-- Helper Detail Modal -->
+      <div class="modal" id="modal-helper" style="display: none;">
+        <div class="modal-header">
+          <span class="modal-title">帮手详情</span>
+          <div class="modal-close" onclick="closeModal()">✕</div>
+        </div>
+        <div class="modal-body" id="modal-helper-body"></div>
+        <div class="modal-footer">
+          <button class="btn btn-primary btn-block" onclick="confirmSelectHelper()">选择此帮手</button>
+        </div>
+      </div>
+
+      <!-- Order Confirm Modal -->
+      <div class="modal" id="modal-confirm" style="display: none;">
+        <div class="modal-header">
+          <span class="modal-title">确认发布</span>
+          <div class="modal-close" onclick="closeModal()">✕</div>
+        </div>
+        <div class="modal-body" id="modal-confirm-body"></div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" style="flex:1;" onclick="closeModal()">取消</button>
+          <button class="btn btn-accent" style="flex:1;" onclick="confirmPublish()">确认发布</button>
+        </div>
+      </div>
+
+      <!-- Complete Order Modal -->
+      <div class="modal" id="modal-complete" style="display: none;">
+        <div class="modal-header">
+          <span class="modal-title">订单完成</span>
+          <div class="modal-close" onclick="closeModal()">✕</div>
+        </div>
+        <div class="modal-body">
+          <div class="rating-stars" id="rating-stars">
+            <span class="rating-star" onclick="setRating(1)">★</span>
+            <span class="rating-star" onclick="setRating(2)">★</span>
+            <span class="rating-star" onclick="setRating(3)">★</span>
+            <span class="rating-star" onclick="setRating(4)">★</span>
+            <span class="rating-star" onclick="setRating(5)">★</span>
+          </div>
+          <div class="rating-label" id="rating-label">点击评分</div>
+          <textarea class="review-text" placeholder="分享你的服务体验（可选）" id="review-text"></textarea>
+
+          <!-- Photo/Video Upload Section -->
+          <div style="margin-top: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <span style="font-size: 13px; font-weight: 500; color: var(--text);">服务凭证（选填）</span>
+              <div style="display: flex; gap: 8px;">
+                <button onclick="showToast('切换到图片模式')" style="padding: 4px 10px; border-radius: 12px; border: 1px solid var(--primary); background: var(--primary-bg); color: var(--primary); font-size: 11px; cursor: pointer;">📷 图片</button>
+                <button onclick="showToast('切换到视频模式')" style="padding: 4px 10px; border-radius: 12px; border: 1px solid var(--border); background: white; color: var(--text-secondary); font-size: 11px; cursor: pointer;">🎬 视频</button>
+              </div>
+            </div>
+            <!-- Upload Grid -->
+            <div id="upload-grid" style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <!-- Upload Button -->
+              <div onclick="showToast('模拟上传凭证')" style="width: 72px; height: 72px; border-radius: 10px; border: 2px dashed var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background: var(--bg-secondary); transition: all 0.2s;">
+                <span style="font-size: 22px; color: var(--text-muted);">+</span>
+                <span style="font-size: 10px; color: var(--text-muted);">添加</span>
+              </div>
+              <!-- Sample Uploaded Image 1 -->
+              <div style="position: relative; width: 72px; height: 72px; border-radius: 10px; overflow: hidden;">
+                <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=150&h=150&fit=crop" style="width: 100%; height: 100%; object-fit: cover;">
+                <div style="position: absolute; bottom: 2px; right: 2px; background: rgba(0,0,0,0.5); border-radius: 4px; padding: 1px 4px; font-size: 9px; color: white;">📷</div>
+              </div>
+              <!-- Sample Uploaded Image 2 -->
+              <div style="position: relative; width: 72px; height: 72px; border-radius: 10px; overflow: hidden;">
+                <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=150&h=150&fit=crop" style="width: 100%; height: 100%; object-fit: cover;">
+                <div style="position: absolute; bottom: 2px; right: 2px; background: rgba(0,0,0,0.5); border-radius: 4px; padding: 1px 4px; font-size: 9px; color: white;">📷</div>
+              </div>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">上传服务照片或视频作为凭证，最多 9 张</p>
+          </div>
+
+          <div class="tip-options">
+            <div class="tip-option" onclick="selectTip(this, 0)">不贴</div>
+            <div class="tip-option" onclick="selectTip(this, 10)">+¥10</div>
+            <div class="tip-option" onclick="selectTip(this, 20)">+¥20</div>
+            <div class="tip-option" onclick="selectTip(this, 50)">+¥50</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary btn-block" onclick="submitCompletion()">提交评价</button>
+        </div>
+      </div>
+
+      <!-- Emergency Modal -->
+      <div class="modal" id="modal-emergency" style="display: none;">
+        <div class="modal-header">
+          <span class="modal-title">紧急求助</span>
+          <div class="modal-close" onclick="closeModal()">✕</div>
+        </div>
+        <div class="modal-body">
+          <div class="confirm-service" style="background: var(--danger-bg); border: 2px solid var(--danger);">
+            <div class="confirm-service-icon" style="background: linear-gradient(135deg, var(--danger), #EF5350);">⚡</div>
+            <div class="confirm-service-info">
+              <h4 style="color: var(--danger);">紧急求助</h4>
+              <p>宠物突发情况，急需帮助</p>
+            </div>
+          </div>
+          <div class="input-group">
+            <label class="input-label">紧急情况描述</label>
+            <textarea class="review-text" placeholder="请简要描述紧急情况..." id="emergency-desc" style="height: 80px;"></textarea>
+          </div>
+          <div class="input-group" style="margin-bottom: 0;">
+            <label class="input-label">联系电话</label>
+            <input class="input" type="tel" value="138-8888-8888" id="emergency-phone">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-danger btn-block" onclick="submitEmergency()">立即求助</button>
+        </div>
+      </div>
+
+      <!-- Add Pet Modal -->
+      <div class="modal" id="modal-add-pet" style="display: none;">
+        <div class="modal-header">
+          <span class="modal-title">添加宠物</span>
+          <div class="modal-close" onclick="closeModal()">✕</div>
+        </div>
+        <div class="modal-body">
+          <div class="input-group">
+            <label class="input-label">宠物昵称</label>
+            <input class="input" type="text" placeholder="例如：豆豆" id="new-pet-name">
+          </div>
+          <div class="input-group">
+            <label class="input-label">宠物类型</label>
+            <div class="pet-type-grid">
+              <div class="pet-type-item selected" data-type="dog" onclick="selectPetType(this, '🐕')">
+                <span>🐕</span><span>狗狗</span>
+              </div>
+              <div class="pet-type-item" data-type="cat" onclick="selectPetType(this, '🐱')">
+                <span>🐱</span><span>猫咪</span>
+              </div>
+              <div class="pet-type-item" data-type="other" onclick="selectPetType(this, '🐹')">
+                <span>🐹</span><span>其他</span>
+              </div>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="input-group">
+              <label class="input-label">品种</label>
+              <input class="input" type="text" placeholder="例如：金毛" id="new-pet-breed">
+            </div>
+            <div class="input-group">
+              <label class="input-label">年龄</label>
+              <input class="input" type="text" placeholder="例如：2岁" id="new-pet-age">
+            </div>
+          </div>
+          <div class="input-group" style="margin-bottom: 0;">
+            <label class="input-label">健康备注</label>
+            <input class="input" type="text" placeholder="例如：需定时吃药" id="new-pet-note">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" style="flex:1;" onclick="closeModal()">取消</button>
+          <button class="btn btn-primary" style="flex:1;" onclick="addNewPet()">添加</button>
+        </div>
+      </div>
+
+      <!-- Pets List Modal -->
+      <div class="modal" id="modal-pets" style="display: none;">
+        <div class="modal-header">
+          <span class="modal-title">我的宠物</span>
+          <div class="modal-close" onclick="closeModal()">✕</div>
+        </div>
+        <div class="modal-body" id="modal-pets-body"></div>
+        <div class="modal-footer">
+          <button class="btn btn-outline btn-block" onclick="closeModal()">关闭</button>
+        </div>
+      </div>
+
+      <!-- Order Detail Modal -->
+      <div class="modal" id="modal-order-detail" style="display: none; max-height: 95vh;">
+        <div class="modal-header">
+          <span class="modal-title">订单详情</span>
+          <div class="modal-close" onclick="closeModal()">✕</div>
+        </div>
+        <div class="modal-body" id="modal-order-detail-body" style="max-height: calc(95vh - 120px); overflow-y: auto;"></div>
+      </div>
+
+      <!-- Address Modal -->
+      <div class="modal" id="modal-address" style="display: none;">
+        <div class="modal-header">
+          <span class="modal-title">我的地址</span>
+          <div class="modal-close" onclick="closeModal()">✕</div>
+        </div>
+        <div class="modal-body">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <span style="font-size: 13px; color: var(--text-muted);">管理您的常用服务地址</span>
+            <button class="btn btn-sm btn-primary" onclick="showToast('添加新地址')">+ 添加</button>
+          </div>
+          <div class="address-card" style="padding: 16px; background: var(--bg-secondary); border-radius: var(--radius-sm); margin-bottom: 12px; border-left: 4px solid var(--primary);">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                  <span style="font-size: 14px; font-weight: 600; color: var(--text);">阳光花城三期</span>
+                  <span class="tag tag-primary" style="padding: 2px 8px; font-size: 10px;">默认</span>
+                </div>
+                <p style="font-size: 13px; color: var(--text-light); margin-bottom: 4px;">7栋2单元 502室</p>
+                <p style="font-size: 12px; color: var(--text-muted);">成都市 · 高新区</p>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <span onclick="showToast('编辑地址')" style="cursor: pointer; color: var(--text-muted);">✏️</span>
+                <span onclick="showToast('删除地址')" style="cursor: pointer; color: var(--danger);">🗑️</span>
+              </div>
+            </div>
+          </div>
+          <div class="address-card" style="padding: 16px; background: var(--bg-secondary); border-radius: var(--radius-sm); margin-bottom: 12px; border-left: 4px solid var(--border);">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                  <span style="font-size: 14px; font-weight: 600; color: var(--text);">阳光花城一期</span>
+                </div>
+                <p style="font-size: 13px; color: var(--text-light); margin-bottom: 4px;">3栋1单元 1203室</p>
+                <p style="font-size: 12px; color: var(--text-muted);">成都市 · 高新区</p>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <span onclick="showToast('设为默认')" style="cursor: pointer; color: var(--primary);">⭐</span>
+                <span onclick="showToast('编辑地址')" style="cursor: pointer; color: var(--text-muted);">✏️</span>
+                <span onclick="showToast('删除地址')" style="cursor: pointer; color: var(--danger);">🗑️</span>
+              </div>
+            </div>
+          </div>
+          <div class="address-card" style="padding: 16px; background: var(--bg-secondary); border-radius: var(--radius-sm); border-left: 4px solid var(--border);">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                  <span style="font-size: 14px; font-weight: 600; color: var(--text);">父母家</span>
+                </div>
+                <p style="font-size: 13px; color: var(--text-light); margin-bottom: 4px;">龙湖小区 5栋3单元 801室</p>
+                <p style="font-size: 12px; color: var(--text-muted);">成都市 · 锦江区</p>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <span onclick="showToast('设为默认')" style="cursor: pointer; color: var(--primary);">⭐</span>
+                <span onclick="showToast('编辑地址')" style="cursor: pointer; color: var(--text-muted);">✏️</span>
+                <span onclick="showToast('删除地址')" style="cursor: pointer; color: var(--danger);">🗑️</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline btn-block" onclick="closeModal()">关闭</button>
+        </div>
+      </div>
+
+      <!-- Messages Modal -->
+      <div class="modal" id="modal-messages" style="display: none; max-height: 95vh;">
+        <div class="modal-header">
+          <span class="modal-title">消息通知</span>
+          <div class="modal-close" onclick="closeModal()">✕</div>
+        </div>
+        <div class="modal-body" style="max-height: calc(95vh - 120px); overflow-y: auto; padding: 0;">
+          <div class="message-item" onclick="showToast('查看订单详情')" style="display: flex; gap: 14px; padding: 16px; border-bottom: 1px solid var(--border); background: var(--primary-bg); cursor: pointer;">
+            <div style="width: 44px; height: 44px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">📋</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <span style="font-size: 14px; font-weight: 600; color: var(--text);">订单已匹配</span>
+                <span style="font-size: 11px; color: var(--text-muted);">刚刚</span>
+              </div>
+              <p style="font-size: 13px; color: var(--text-light); margin-bottom: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">王丽已接受您的遛狗服务请求，请注意查看</p>
+            </div>
+          </div>
+          <div class="message-item" onclick="showToast('查看评价')" style="display: flex; gap: 14px; padding: 16px; border-bottom: 1px solid var(--border); cursor: pointer;">
+            <div style="width: 44px; height: 44px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">⭐</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <span style="font-size: 14px; font-weight: 600; color: var(--text);">新评价</span>
+                <span style="font-size: 11px; color: var(--text-muted);">10分钟前</span>
+              </div>
+              <p style="font-size: 13px; color: var(--text-light); margin-bottom: 0;">李强对您的喂猫服务进行了评价：★★★★★</p>
+            </div>
+          </div>
+          <div class="message-item" onclick="showToast('查看提醒')" style="display: flex; gap: 14px; padding: 16px; border-bottom: 1px solid var(--border); cursor: pointer;">
+            <div style="width: 44px; height: 44px; background: var(--info); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">🔔</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <span style="font-size: 14px; font-weight: 600; color: var(--text);">服务提醒</span>
+                <span style="font-size: 11px; color: var(--text-muted);">30分钟前</span>
+              </div>
+              <p style="font-size: 13px; color: var(--text-light); margin-bottom: 0;">您有一项遛狗服务将于今天14:00开始</p>
+            </div>
+          </div>
+          <div class="message-item" onclick="showToast('查看审核')" style="display: flex; gap: 14px; padding: 16px; border-bottom: 1px solid var(--border); cursor: pointer;">
+            <div style="width: 44px; height: 44px; background: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">✅</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <span style="font-size: 14px; font-weight: 600; color: var(--text);">认证通过</span>
+                <span style="font-size: 11px; color: var(--text-muted);">昨天</span>
+              </div>
+              <p style="font-size: 13px; color: var(--text-light); margin-bottom: 0;">恭喜！您的宠主认证已通过审核</p>
+            </div>
+          </div>
+          <div class="message-item" onclick="showToast('查看公告')" style="display: flex; gap: 14px; padding: 16px; cursor: pointer;">
+            <div style="width: 44px; height: 44px; background: var(--purple); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">📢</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <span style="font-size: 14px; font-weight: 600; color: var(--text);">平台公告</span>
+                <span style="font-size: 11px; color: var(--text-muted);">3天前</span>
+              </div>
+              <p style="font-size: 13px; color: var(--text-light); margin-bottom: 0;">毛孩子邻里2.0版本上线，新增紧急求助功能</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Service Stats Modal -->
+      <div class="modal" id="modal-stats" style="display: none;">
+        <div class="modal-header">
+          <span class="modal-title">服务统计</span>
+          <div class="modal-close" onclick="closeModal()">✕</div>
+        </div>
+        <div class="modal-body">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+            <div style="background: linear-gradient(135deg, var(--primary), var(--primary-dark)); padding: 20px; border-radius: var(--radius-sm); text-align: center;">
+              <div style="font-size: 28px; font-weight: 700; color: white; font-family: 'Quicksand', sans-serif;">286</div>
+              <div style="font-size: 12px; color: rgba(255,255,255,0.8);">累计服务次数</div>
+            </div>
+            <div style="background: linear-gradient(135deg, var(--accent), #E8895A); padding: 20px; border-radius: var(--radius-sm); text-align: center;">
+              <div style="font-size: 28px; font-weight: 700; color: white; font-family: 'Quicksand', sans-serif;">¥8,420</div>
+              <div style="font-size: 12px; color: rgba(255,255,255,0.8);">本月收入</div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 20px;">
+            <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 12px;">服务类型分布</h4>
+            <div style="background: var(--bg-secondary); padding: 16px; border-radius: var(--radius-sm);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-size: 13px; color: var(--text);">🐕 遛狗</span>
+                <span style="font-size: 13px; font-weight: 600; color: var(--primary);">158次</span>
+              </div>
+              <div style="height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 14px;">
+                <div style="height: 100%; width: 55%; background: var(--primary); border-radius: 3px;"></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-size: 13px; color: var(--text);">🐱 喂猫</span>
+                <span style="font-size: 13px; font-weight: 600; color: var(--accent);">86次</span>
+              </div>
+              <div style="height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 14px;">
+                <div style="height: 100%; width: 30%; background: var(--accent); border-radius: 3px;"></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-size: 13px; color: var(--text);">🎾 陪玩</span>
+                <span style="font-size: 13px; font-weight: 600; color: var(--info);">28次</span>
+              </div>
+              <div style="height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 14px;">
+                <div style="height: 100%; width: 10%; background: var(--info); border-radius: 3px;"></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 13px; color: var(--text);">🧹 清洁</span>
+                <span style="font-size: 13px; font-weight: 600; color: var(--purple);">14次</span>
+              </div>
+              <div style="height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 10px;">
+                <div style="height: 100%; width: 5%; background: var(--purple); border-radius: 3px;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 12px;">月度收入趋势</h4>
+            <div style="display: flex; align-items: flex-end; gap: 8px; height: 100px; padding: 0 8px;">
+              <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                <div style="height: 40px;"></div>
+                <div style="width: 100%; background: var(--primary-light); border-radius: 4px 4px 0 0;"></div>
+                <span style="font-size: 10px; color: var(--text-muted);">1月</span>
+              </div>
+              <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                <div style="height: 20px;"></div>
+                <div style="width: 100%; background: var(--primary-light); border-radius: 4px 4px 0 0;"></div>
+                <span style="font-size: 10px; color: var(--text-muted);">2月</span>
+              </div>
+              <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                <div style="height: 10px;"></div>
+                <div style="width: 100%; background: var(--primary-light); border-radius: 4px 4px 0 0;"></div>
+                <span style="font-size: 10px; color: var(--text-muted);">3月</span>
+              </div>
+              <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                <div style="height: 0;"></div>
+                <div style="width: 100%; height: 80px; background: linear-gradient(180deg, var(--accent), var(--accent-light)); border-radius: 4px 4px 0 0;"></div>
+                <span style="font-size: 10px; color: var(--text); font-weight: 600;">4月</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline btn-block" onclick="closeModal()">关闭</button>
+        </div>
+      </div>
+
+      <!-- Certification Modal -->
+      <div class="modal" id="modal-certification" style="display: none;">
+        <div class="modal-header">
+          <span class="modal-title">资质认证</span>
+          <div class="modal-close" onclick="closeModal()">✕</div>
+        </div>
+        <div class="modal-body">
+          <div style="text-align: center; padding: 20px 0; margin-bottom: 20px;">
+            <div style="width: 80px; height: 80px; background: var(--success-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 16px;">✅</div>
+            <h3 style="font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 4px;">已认证帮手</h3>
+            <p style="font-size: 13px; color: var(--text-light);">认证时间：2024年3月15日</p>
+          </div>
+
+          <div style="margin-bottom: 20px;">
+            <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 12px;">已认证服务类型</h4>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--primary-bg); border-radius: var(--radius-sm);">
+                <span style="font-size: 24px;">🐕</span>
+                <div>
+                  <div style="font-size: 14px; font-weight: 600; color: var(--text);">遛狗服务</div>
+                  <div style="font-size: 11px; color: var(--success);">✓ 已认证</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--accent-bg); border-radius: var(--radius-sm);">
+                <span style="font-size: 24px;">🐱</span>
+                <div>
+                  <div style="font-size: 14px; font-weight: 600; color: var(--text);">喂猫服务</div>
+                  <div style="font-size: 11px; color: var(--success);">✓ 已认证</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 20px;">
+            <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 12px;">认证材料</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div style="text-align: center;">
+                <div style="width: 100%; height: 80px; background: var(--bg-secondary); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 36px; margin-bottom: 8px;">🪪</div>
+                <span style="font-size: 11px; color: var(--text-light);">身份证</span>
+              </div>
+              <div style="text-align: center;">
+                <div style="width: 100%; height: 80px; background: var(--bg-secondary); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 36px; margin-bottom: 8px;">🐾</div>
+                <span style="font-size: 11px; color: var(--text-light);">宠物经验证明</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="background: var(--info-bg); padding: 16px; border-radius: var(--radius-sm); margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 24px;">💡</span>
+              <div>
+                <h5 style="font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px;">升级认证</h5>
+                <p style="font-size: 12px; color: var(--text-light); margin: 0;">完成陪玩和清洁服务培训后可解锁更多服务类型</p>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-block" onclick="showToast('陪玩培训课程即将上线', 'success')">申请陪玩认证</button>
+        </div>
+      </div>
+
+      <!-- Support Modal -->
+      <div class="modal" id="modal-support" style="display: none;">
+        <div class="modal-header">
+          <span class="modal-title">联系客服</span>
+          <div class="modal-close" onclick="closeModal()">✕</div>
+        </div>
+        <div class="modal-body">
+          <div style="text-align: center; padding: 20px 0;">
+            <div style="width: 80px; height: 80px; background: var(--primary-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 16px;">📞</div>
+            <h3 style="font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 4px;">400-888-8888</h3>
+            <p style="font-size: 13px; color: var(--text-light);">工作日 9:00 - 18:00</p>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px;">
+            <button class="btn btn-primary btn-block" onclick="showToast('正在拨打...')">
+              <span style="font-size: 18px;">📞</span> 拨打电话
+            </button>
+            <button class="btn btn-secondary btn-block" onclick="showToast('客服MM在线')">
+              <span style="font-size: 18px;">💬</span> 在线客服
+            </button>
+          </div>
+          <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border);">
+            <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 12px;">常见问题</h4>
+            <div class="faq-item" onclick="showToast('查看答案')" style="padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 13px; color: var(--text);">如何成为认证帮手？</span>
+                <span style="color: var(--text-muted);">›</span>
+              </div>
+            </div>
+            <div class="faq-item" onclick="showToast('查看答案')" style="padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 13px; color: var(--text);">如何修改服务地址？</span>
+                <span style="color: var(--text-muted);">›</span>
+              </div>
+            </div>
+            <div class="faq-item" onclick="showToast('查看答案')" style="padding: 12px 0; cursor: pointer;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 13px; color: var(--text);">订单取消规则是什么？</span>
+                <span style="color: var(--text-muted);">›</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Help Modal -->
+      <div class="modal" id="modal-help" style="display: none;">
+        <div class="modal-header">
+          <span class="modal-title">帮助与反馈</span>
+          <div class="modal-close" onclick="closeModal()">✕</div>
+        </div>
+        <div class="modal-body">
+          <div class="help-category" style="margin-bottom: 20px;">
+            <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 12px;">新手入门</h4>
+            <div onclick="showToast('如何发布需求')" style="padding: 14px; background: var(--bg-secondary); border-radius: var(--radius-sm); margin-bottom: 8px; cursor: pointer;">
+              <div style="font-size: 14px; color: var(--text); margin-bottom: 4px;">如何发布服务需求？</div>
+              <div style="font-size: 12px; color: var(--text-muted);">图文教程让您快速上手</div>
+            </div>
+            <div onclick="showToast('如何找帮手')" style="padding: 14px; background: var(--bg-secondary); border-radius: var(--radius-sm); margin-bottom: 8px; cursor: pointer;">
+              <div style="font-size: 14px; color: var(--text); margin-bottom: 4px;">如何找到靠谱的帮手？</div>
+              <div style="font-size: 12px; color: var(--text-muted);">了解帮手认证和评价体系</div>
+            </div>
+            <div onclick="showToast('如何预约')" style="padding: 14px; background: var(--bg-secondary); border-radius: var(--radius-sm); cursor: pointer;">
+              <div style="font-size: 14px; color: var(--text); margin-bottom: 4px;">如何预约周期性服务？</div>
+              <div style="font-size: 12px; color: var(--text-muted);">设置每周固定服务时间</div>
+            </div>
+          </div>
+          <div class="help-category" style="margin-bottom: 20px;">
+            <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 12px;">服务保障</h4>
+            <div onclick="showToast('查看保障')" style="padding: 14px; background: var(--bg-secondary); border-radius: var(--radius-sm); margin-bottom: 8px; cursor: pointer;">
+              <div style="font-size: 14px; color: var(--text); margin-bottom: 4px;">服务期间宠物安全如何保障？</div>
+              <div style="font-size: 12px; color: var(--text-muted);">平台提供宠物意外险</div>
+            </div>
+            <div onclick="showToast('查看退款')" style="padding: 14px; background: var(--bg-secondary); border-radius: var(--radius-sm); cursor: pointer;">
+              <div style="font-size: 14px; color: var(--text); margin-bottom: 4px;">退款政策说明</div>
+              <div style="font-size: 12px; color: var(--text-muted);">服务未完成可申请退款</div>
+            </div>
+          </div>
+          <div style="margin-top: 24px;">
+            <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 12px;">意见反馈</h4>
+            <div class="input-group" style="margin-bottom: 12px;">
+              <label class="input-label">问题描述</label>
+              <textarea class="review-text" placeholder="请详细描述您遇到的问题或建议..." style="height: 100px;"></textarea>
+            </div>
+            <div class="input-group" style="margin-bottom: 16px;">
+              <label class="input-label">联系方式（可选）</label>
+              <input class="input" type="text" placeholder="手机号或邮箱">
+            </div>
+            <button class="btn btn-primary btn-block" onclick="showToast('反馈已提交，感谢您的建议！', 'success')">提交反馈</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- About Modal -->
+      <div class="modal" id="modal-about" style="display: none;">
+        <div class="modal-header">
+          <span class="modal-title">关于我们</span>
+          <div class="modal-close" onclick="closeModal()">✕</div>
+        </div>
+        <div class="modal-body">
+          <div style="text-align: center; padding: 24px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px;">
+            <div style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary), var(--accent)); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 16px;">🐾</div>
+            <h3 style="font-size: 20px; font-weight: 700; color: var(--text); font-family: 'Quicksand', sans-serif; margin-bottom: 4px;">毛孩子邻里</h3>
+            <p style="font-size: 13px; color: var(--text-light); margin-bottom: 12px;">版本 1.0.0</p>
+            <p style="font-size: 12px; color: var(--text-muted);">邻里互助 · 宠伴无忧</p>
+          </div>
+          <div style="margin-bottom: 20px;">
+            <p style="font-size: 13px; color: var(--text-light); line-height: 1.8; margin-bottom: 16px;">
+              毛孩子邻里是一个基于社区的宠物服务平台，连接需要宠物服务的宠主和愿意提供帮助的邻里帮手。
+            </p>
+            <p style="font-size: 13px; color: var(--text-light); line-height: 1.8;">
+              我们致力于为宠物主人提供便捷、可靠的上门服务，同时帮助有爱心的人士通过照顾宠物赚取额外收入。
+            </p>
+          </div>
+          <div style="background: var(--bg-secondary); padding: 16px; border-radius: var(--radius-sm); margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
+              <span style="font-size: 13px; color: var(--text-light);">官方微信</span>
+              <span style="font-size: 13px; color: var(--text);">maohai_zi</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
+              <span style="font-size: 13px; color: var(--text-light);">客服电话</span>
+              <span style="font-size: 13px; color: var(--primary);">400-888-8888</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+              <span style="font-size: 13px; color: var(--text-light);">官方网站</span>
+              <span style="font-size: 13px; color: var(--text);">www.petcare.com</span>
+            </div>
+          </div>
+          <div style="text-align: center; padding-top: 16px;">
+            <p style="font-size: 11px; color: var(--text-muted);">© 2026 毛孩子邻里 版权所有</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Service Time Modal -->
+      <div class="modal" id="modal-servicetime" style="display: none;">
+        <div class="modal-header">
+          <span class="modal-title">服务时间设置</span>
+          <div class="modal-close" onclick="closeModal()">✕</div>
+        </div>
+        <div class="modal-body">
+          <p style="font-size: 13px; color: var(--text-light); margin-bottom: 16px;">设置您可接单的时间段，帮助用户更好地找到您。</p>
+
+          <div style="margin-bottom: 24px;">
+            <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 12px;">工作日（周一至周五）</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div onclick="toggleTimeSlot(this)" style="padding: 14px; background: var(--primary-bg); border-radius: var(--radius-sm); text-align: center; border: 2px solid var(--primary); cursor: pointer;">
+                <div style="font-size: 14px; font-weight: 600; color: var(--primary-dark);">上午</div>
+                <div style="font-size: 11px; color: var(--text-light);">8:00-12:00</div>
+              </div>
+              <div onclick="toggleTimeSlot(this)" style="padding: 14px; background: var(--bg-secondary); border-radius: var(--radius-sm); text-align: center; border: 2px solid transparent; cursor: pointer;">
+                <div style="font-size: 14px; font-weight: 600; color: var(--text);">下午</div>
+                <div style="font-size: 11px; color: var(--text-light);">14:00-18:00</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 24px;">
+            <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 12px;">周末（周六、周日）</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div onclick="toggleTimeSlot(this)" style="padding: 14px; background: var(--primary-bg); border-radius: var(--radius-sm); text-align: center; border: 2px solid var(--primary); cursor: pointer;">
+                <div style="font-size: 14px; font-weight: 600; color: var(--primary-dark);">上午</div>
+                <div style="font-size: 11px; color: var(--text-light);">8:00-12:00</div>
+              </div>
+              <div onclick="toggleTimeSlot(this)" style="padding: 14px; background: var(--primary-bg); border-radius: var(--radius-sm); text-align: center; border: 2px solid var(--primary); cursor: pointer;">
+                <div style="font-size: 14px; font-weight: 600; color: var(--primary-dark);">下午</div>
+                <div style="font-size: 11px; color: var(--text-light);">14:00-18:00</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 16px;">
+            <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 12px;">紧急接单</h4>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; background: var(--bg-secondary); border-radius: var(--radius-sm);">
+              <div>
+                <div style="font-size: 14px; color: var(--text); margin-bottom: 2px;">接受紧急求助</div>
+                <div style="font-size: 11px; color: var(--text-muted);">开启后可接收紧急求助订单</div>
+              </div>
+              <div class="toggle-switch active" onclick="toggleSwitch(this)" style="position: relative; width: 48px; height: 26px; background: var(--primary); border-radius: 13px; cursor: pointer; transition: all 0.2s;"></div>
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-block" onclick="showToast('服务时间已保存', 'success')">保存设置</button>
+        </div>
+      </div>
+
+      <!-- Coupon Modal -->
+      <div class="modal" id="modal-coupons" style="display: none; max-height: 95vh;">
+        <div class="modal-header">
+          <span class="modal-title">我的优惠券</span>
+          <div class="modal-close" onclick="closeModal()">✕</div>
+        </div>
+        <div class="modal-body" style="max-height: calc(95vh - 60px); overflow-y: auto; padding: 0;">
+          <div style="padding: 16px 20px;">
+            <!-- Coupon Tabs -->
+            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+              <button onclick="showToast('切换到可用券')" style="flex:1; padding: 10px; border-radius: 20px; border: none; background: var(--primary); color: white; font-size: 14px; font-weight: 500; cursor: pointer;">可用 (3)</button>
+              <button onclick="showToast('切换到已使用')" style="flex:1; padding: 10px; border-radius: 20px; border: 1px solid var(--border); background: white; color: var(--text); font-size: 14px; cursor: pointer;">已使用 (2)</button>
+              <button onclick="showToast('切换到已过期')" style="flex:1; padding: 10px; border-radius: 20px; border: 1px solid var(--border); background: white; color: var(--text); font-size: 14px; cursor: pointer;">已过期 (1)</button>
+            </div>
+
+            <!-- Available Coupon 1 -->
+            <div style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%); border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; position: relative; overflow: hidden;">
+              <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 8px; background: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(255,255,255,0.3) 4px, rgba(255,255,255,0.3) 8px);"></div>
+              <div style="width: 64px; height: 64px; background: rgba(255,255,255,0.2); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0;">
+                <span style="color: white; font-size: 22px; font-weight: 700; line-height: 1;">¥20</span>
+                <span style="color: rgba(255,255,255,0.8); font-size: 10px;">满100可用</span>
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <h4 style="color: white; font-size: 15px; font-weight: 600; margin-bottom: 4px;">新人专享券</h4>
+                <p style="color: rgba(255,255,255,0.85); font-size: 12px; margin-bottom: 4px;">遛狗/喂猫/陪玩全品类可用</p>
+                <p style="color: rgba(255,255,255,0.7); font-size: 11px;">有效期至 2026.04.30</p>
+              </div>
+              <button onclick="showToast('立即使用')" style="background: white; color: #FF6B6B; border: none; padding: 8px 14px; border-radius: 16px; font-size: 12px; font-weight: 600; cursor: pointer; flex-shrink: 0;">立即用</button>
+            </div>
+
+            <!-- Available Coupon 2 -->
+            <div style="background: linear-gradient(135deg, #7BA05B 0%, #9BC27A 100%); border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; position: relative; overflow: hidden;">
+              <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 8px; background: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(255,255,255,0.3) 4px, rgba(255,255,255,0.3) 8px);"></div>
+              <div style="width: 64px; height: 64px; background: rgba(255,255,255,0.2); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0;">
+                <span style="color: white; font-size: 22px; font-weight: 700; line-height: 1;">¥10</span>
+                <span style="color: rgba(255,255,255,0.8); font-size: 10px;">满60可用</span>
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <h4 style="color: white; font-size: 15px; font-weight: 600; margin-bottom: 4px;">邻里互助券</h4>
+                <p style="color: rgba(255,255,255,0.85); font-size: 12px; margin-bottom: 4px;">本小区用户专属优惠</p>
+                <p style="color: rgba(255,255,255,0.7); font-size: 11px;">有效期至 2026.05.15</p>
+              </div>
+              <button onclick="showToast('立即使用')" style="background: white; color: #7BA05B; border: none; padding: 8px 14px; border-radius: 16px; font-size: 12px; font-weight: 600; cursor: pointer; flex-shrink: 0;">立即用</button>
+            </div>
+
+            <!-- Available Coupon 3 -->
+            <div style="background: linear-gradient(135deg, #F4A261 0%, #F7C59F 100%); border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; position: relative; overflow: hidden;">
+              <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 8px; background: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(255,255,255,0.3) 4px, rgba(255,255,255,0.3) 8px);"></div>
+              <div style="width: 64px; height: 64px; background: rgba(255,255,255,0.2); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0;">
+                <span style="color: white; font-size: 22px; font-weight: 700; line-height: 1;">¥5</span>
+                <span style="color: rgba(255,255,255,0.8); font-size: 10px;">无门槛</span>
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <h4 style="color: white; font-size: 15px; font-weight: 600; margin-bottom: 4px;">限时折扣券</h4>
+                <p style="color: rgba(255,255,255,0.85); font-size: 12px; margin-bottom: 4px;">每周三会员日专享</p>
+                <p style="color: rgba(255,255,255,0.7); font-size: 11px;">有效期至 2026.04.20</p>
+              </div>
+              <button onclick="showToast('立即使用')" style="background: white; color: #F4A261; border: none; padding: 8px 14px; border-radius: 16px; font-size: 12px; font-weight: 600; cursor: pointer; flex-shrink: 0;">立即用</button>
+            </div>
+
+            <!-- Coupon Tips -->
+            <div style="background: var(--bg-secondary); border-radius: 10px; padding: 14px; margin-top: 8px;">
+              <h5 style="font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 8px;">使用说明</h5>
+              <ul style="font-size: 12px; color: var(--text-secondary); line-height: 1.8; padding-left: 16px;">
+                <li>每笔订单仅可使用一张优惠券</li>
+                <li>优惠券不可叠加，不找零，不兑现</li>
+                <li>部分服务可能不支持使用优惠券</li>
+                <li>更多优惠券可在「发现」页领取</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==================== DATA ====================
+    const services = {
+      walk: { name: '遛狗', icon: '🐕', priceRange: '50-80' },
+      feed: { name: '喂猫', icon: '🐱', priceRange: '40-60' },
+      play: { name: '陪玩', icon: '🎾', priceRange: '50-70' },
+      clean: { name: '清洁', icon: '🧹', priceRange: '60-100' }
+    };
+
+    let pets = [
+      { id: 1, name: '豆豆', type: 'dog', breed: '金毛', age: '3岁', icon: '🐕', note: '需定时运动' },
+      { id: 2, name: '咪咪', type: 'cat', breed: '英短', age: '2岁', icon: '🐱', note: '已绝育' }
+    ];
+
+    let helpers = [
+      { id: 1, name: '王丽', avatar: '丽', rating: 4.9, reviews: 286, services: ['遛狗', '喂猫'], community: '阳光花城三期', distance: '200m', experience: '3年', isVerified: true, isStar: true, canUrgent: true, bio: '超级喜欢小动物，家里养了两只金毛一只猫咪。有丰富的宠物照顾经验，可以提供专业的遛狗、喂猫服务。' },
+      { id: 2, name: '李强', avatar: '强', rating: 4.8, reviews: 158, services: ['喂猫', '清洁'], community: '阳光花城二期', distance: '350m', experience: '2年', isVerified: true, isStar: false, canUrgent: false, bio: '资深猫奴，对猫咪照顾有独到见解。擅长喂猫、清洁服务，工作认真负责。' },
+      { id: 3, name: '周婷', avatar: '婷', rating: 5.0, reviews: 42, services: ['遛狗', '喂猫', '陪玩'], community: '阳光花城一期', distance: '500m', experience: '1年', isVerified: true, isStar: false, canUrgent: true, bio: '全能型帮手，狗狗猫咪都很喜欢。年轻有活力，擅长陪玩，给宠物带来快乐。' },
+      { id: 4, name: '陈浩', avatar: '浩', rating: 4.7, reviews: 124, services: ['遛狗', '陪玩'], community: '阳光花城三期', distance: '150m', experience: '2年', isVerified: true, isStar: false, canUrgent: false, bio: '热爱运动的帮手，擅长遛狗和陪玩。有耐心，喜欢和宠物互动。' }
+    ];
+
+    let orders = [
+      { id: '20260413045', status: 'ongoing', service: 'walk', petId: 1, helperId: 1, date: '今天', time: '10:00-12:00', address: '阳光花城三期 7栋2单元', price: 60, progress: 2 },
+      { id: '20260413040', status: 'completed', service: 'feed', petId: 2, helperId: 2, date: '4月12日', time: '09:00-10:00', address: '阳光花城三期 7栋2单元', price: 40, progress: 4, rating: 5, proofPhotos: ['https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=300&h=300&fit=crop', 'https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=300&h=300&fit=crop'] },
+      { id: '20260413038', status: 'completed', service: 'play', petId: 1, helperId: 4, date: '4月11日', time: '15:00-17:00', address: '阳光花城三期 7栋2单元', price: 55, progress: 4, rating: 4, proofPhotos: ['https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=300&h=300&fit=crop'] }
+    ];
+
+    let helperRequests = [
+      { id: 'REQ001', service: 'walk', petName: '球球', petType: '🐕', ownerName: '张先生', community: '阳光花城二期', date: '今天', time: '14:00-16:00', price: 60, urgent: false },
+      { id: 'REQ002', service: 'feed', petName: '小黑', petType: '🐱', ownerName: '王阿姨', community: '阳光花城一期', date: '今天', time: '12:00-13:00', price: 45, urgent: true },
+      { id: 'REQ003', service: 'play', petName: '奶茶', petType: '🐱', ownerName: '陈太太', community: '阳光花城三期', date: '明天', time: '10:00-12:00', price: 55, urgent: false }
+    ];
+
+    // ==================== STATE ====================
+    let currentTab = 0;
+    let selectedServiceType = 'walk';
+    let selectedPetId = 1;
+    let selectedDate = 'today';
+    let selectedTimeSlot = '14:00-16:00';
+    let selectedHelper = null;
+    let selectedRating = 0;
+    let selectedTip = 0;
+    let currentOrderId = null;
+    let currentRole = 'owner';
+    let currentOrderFilter = 'all';
+    let newPetIcon = '🐕';
+
+    // ==================== NAVIGATION ====================
+    const tabItems = document.querySelectorAll('.tab-item');
+
+    function switchTab(index) {
+      currentTab = index;
+
+      // Update pages
+      document.querySelectorAll('.page').forEach((page, i) => {
+        if (i === index) {
+          page.classList.add('active');
+        } else {
+          page.classList.remove('active');
+        }
+      });
+
+      // Update tab bar
+      tabItems.forEach((item, i) => {
+        item.classList.toggle('active', i === index);
+      });
+
+      // Refresh page content
+      if (index === 0) renderHomePage();
+      if (index === 1) renderHelpers();
+      if (index === 3) renderOrdersPage();
+      if (index === 4) {
+        updateMyStats();
+        if (currentRole === 'helper') renderHelperOrders();
+      }
+    }
+
+    // ==================== HOME PAGE ====================
+    function renderHomePage() {
+      // Render active orders
+      const activeOrders = orders.filter(o => o.status === 'ongoing' || o.status === 'matched');
+      const ordersEl = document.getElementById('home-orders');
+
+      if (activeOrders.length === 0) {
+        ordersEl.innerHTML = `
+          <div class="empty-state" style="padding: 32px 16px;">
+            <div class="empty-icon" style="width: 70px; height: 70px; font-size: 32px; margin-bottom: 16px;">📋</div>
+            <h3 class="empty-title" style="font-size: 14px;">暂无进行中的订单</h3>
+            <p class="empty-desc" style="font-size: 12px;">点击上方按钮发布需求</p>
+          </div>
+        `;
+      } else {
+        ordersEl.innerHTML = activeOrders.map(order => {
+          const service = services[order.service];
+          const helper = helpers.find(h => h.id === order.helperId);
+          return `
+            <div class="order-card-mini" onclick="showOrderDetail('${order.id}')">
+              <div class="order-service-badge">
+                <span>${service.icon}</span>
+                <span>${service.name}服务 · ${order.status === 'ongoing' ? '进行中' : '已匹配'}</span>
+              </div>
+              <div class="order-meta">
+                <div class="order-meta-left">
+                  <div class="avatar" style="width: 28px; height: 28px; font-size: 12px;">${helper ? helper.avatar : '?'}</div>
+                  <span>${helper ? helper.name : '待匹配'}</span>
+                </div>
+                <div class="order-status-badge">
+                  <span class="status-dot green"></span>
+                  <span class="tag tag-primary" style="padding: 2px 8px; font-size: 10px;">${order.status === 'ongoing' ? '服务中' : '已匹配'}</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Render nearby helpers
+      const helpersEl = document.getElementById('home-helpers');
+      helpersEl.innerHTML = helpers.slice(0, 4).map(helper => `
+        <div class="helper-scroll-item" onclick="showHelperDetail(${helper.id})">
+          <div class="avatar" style="background: linear-gradient(135deg, var(--primary-light), var(--primary));">${helper.avatar}</div>
+          <h4>${helper.name}</h4>
+          <div class="rating" style="justify-content: center; margin-bottom: 4px;">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 12px; height: 12px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <span style="font-size: 12px; font-weight: 600;">${helper.rating}</span>
+          </div>
+          <p>${helper.services[0]} · ${helper.distance}</p>
+        </div>
+      `).join('');
+    }
+
+    // ==================== HELPERS PAGE ====================
+    function renderHelpers() {
+      const searchTerm = document.getElementById('helper-search').value.toLowerCase();
+      let filtered = helpers.filter(h =>
+        h.name.toLowerCase().includes(searchTerm) ||
+        h.services.some(s => s.toLowerCase().includes(searchTerm))
+      );
+
+      const listEl = document.getElementById('helpers-list');
+      listEl.innerHTML = filtered.map((helper, i) => `
+        <div class="helper-card animate-in delay-${i + 1}" onclick="showHelperDetail(${helper.id})">
+          <div class="avatar lg" style="background: linear-gradient(135deg, var(--primary-light), var(--primary));">${helper.avatar}</div>
+          <div class="helper-info">
+            <div class="helper-header">
+              <span class="helper-name">${helper.name}</span>
+              ${helper.isVerified ? '<span class="tag tag-success">已认证</span>' : ''}
+              ${helper.isStar ? '<span class="tag tag-accent">明星帮手</span>' : ''}
+            </div>
+            <p class="helper-meta">${helper.services.join(' · ')} · ${helper.community} · ${helper.experience}经验</p>
+            <div class="helper-stats">
+              <div class="rating">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <span class="rating-value">${helper.rating}</span>
+                <span style="font-size: 11px; color: var(--text-muted);">(${helper.reviews})</span>
+              </div>
+              <span class="helper-distance">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                ${helper.distance}
+              </span>
+            </div>
+            <div class="helper-tags">
+              ${helper.services.map(s => `<span class="tag tag-primary">${s}</span>`).join('')}
+              ${helper.canUrgent ? '<span class="tag tag-accent">可接急单</span>' : ''}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterHelpers(filter, el) {
+      document.querySelectorAll('#helper-filters .filter-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+
+      let filtered = [...helpers];
+      if (filter === 'nearby') filtered.sort((a, b) => parseInt(a.distance) - parseInt(b.distance));
+      else if (filter === 'rating') filtered.sort((a, b) => b.rating - a.rating);
+      else if (filter === 'urgent') filtered = filtered.filter(h => h.canUrgent);
+
+      const listEl = document.getElementById('helpers-list');
+      listEl.innerHTML = filtered.map((helper, i) => `
+        <div class="helper-card" onclick="showHelperDetail(${helper.id})">
+          <div class="avatar lg" style="background: linear-gradient(135deg, var(--primary-light), var(--primary));">${helper.avatar}</div>
+          <div class="helper-info">
+            <div class="helper-header">
+              <span class="helper-name">${helper.name}</span>
+              ${helper.isVerified ? '<span class="tag tag-success">已认证</span>' : ''}
+              ${helper.isStar ? '<span class="tag tag-accent">明星帮手</span>' : ''}
+            </div>
+            <p class="helper-meta">${helper.services.join(' · ')} · ${helper.community} · ${helper.experience}经验</p>
+            <div class="helper-stats">
+              <div class="rating">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <span class="rating-value">${helper.rating}</span>
+              </div>
+              <span class="helper-distance">${helper.distance}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ==================== HELPERS MODAL ====================
+    function showHelperDetail(helperId) {
+      const helper = helpers.find(h => h.id === helperId);
+      selectedHelper = helper;
+
+      const modalBody = document.getElementById('modal-helper-body');
+      modalBody.innerHTML = `
+        <div class="helper-modal-avatar">
+          <div class="avatar xl" style="background: linear-gradient(135deg, var(--primary-light), var(--primary));">${helper.avatar}</div>
+          <h3>${helper.name}</h3>
+          <div class="rating" style="justify-content: center;">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <span class="rating-value">${helper.rating}</span>
+            <span style="font-size: 12px; color: var(--text-muted);">(${helper.reviews}条评价)</span>
+          </div>
+          <div style="display: flex; gap: 6px; justify-content: center; margin-top: 8px;">
+            ${helper.isVerified ? '<span class="tag tag-success">已认证</span>' : ''}
+            ${helper.isStar ? '<span class="tag tag-accent">明星帮手</span>' : ''}
+            ${helper.canUrgent ? '<span class="tag tag-danger">可接急单</span>' : ''}
+          </div>
+        </div>
+        <div class="helper-modal-stats">
+          <div class="helper-modal-stat">
+            <div class="helper-modal-stat-value">${helper.reviews}</div>
+            <div class="helper-modal-stat-label">服务次数</div>
+          </div>
+          <div class="helper-modal-stat">
+            <div class="helper-modal-stat-value">${helper.experience}</div>
+            <div class="helper-modal-stat-label">经验</div>
+          </div>
+          <div class="helper-modal-stat">
+            <div class="helper-modal-stat-value">${helper.distance}</div>
+            <div class="helper-modal-stat-label">距离</div>
+          </div>
+        </div>
+        <div class="helper-modal-tags">
+          ${helper.services.map(s => `<span class="tag tag-primary">${s}</span>`).join('')}
+        </div>
+        <div class="helper-modal-section">
+          <h4>个人简介</h4>
+          <p>${helper.bio}</p>
+        </div>
+        <div class="helper-modal-section" style="margin-bottom: 0;">
+          <h4>服务小区</h4>
+          <p>${helper.community}</p>
+        </div>
+      `;
+
+      showModal('modal-helper');
+    }
+
+    function confirmSelectHelper() {
+      closeModal();
+      showToast(`已选择 ${selectedHelper.name} 为您服务`, 'success');
+    }
+
+    // ==================== PUBLISH PAGE ====================
+    function goToPublish(serviceType) {
+      if (serviceType) {
+        selectedServiceType = serviceType;
+        document.querySelectorAll('.service-item').forEach(item => {
+          item.classList.toggle('selected', item.dataset.service === serviceType);
+        });
+      }
+      renderPetSelector();
+      switchTab(2);
+    }
+
+    function renderPetSelector() {
+      const selector = document.getElementById('pet-selector');
+      selector.innerHTML = pets.map(pet => `
+        <div class="pet-option ${pet.type} ${pet.id === selectedPetId ? 'selected' : ''}" data-pet="${pet.id}" onclick="selectPet(${pet.id}, '${pet.name}', '${pet.type}')">
+          <div class="pet-option-icon">${pet.icon}</div>
+          <h4>${pet.name}</h4>
+          <p>${pet.breed} · ${pet.age}</p>
+        </div>
+      `).join('') + `
+        <div class="pet-option other" onclick="showAddPetModal()">
+          <div class="pet-option-icon" style="font-size: 20px;">+</div>
+          <h4>添加宠物</h4>
+          <p>添加新宠物</p>
+        </div>
+      `;
+    }
+
+    function selectPet(id, name, type) {
+      selectedPetId = id;
+      document.querySelectorAll('.pet-option').forEach(item => {
+        item.classList.toggle('selected', parseInt(item.dataset.pet) === id);
+      });
+    }
+
+    function selectService(el, type) {
+      document.querySelectorAll('.service-item').forEach(item => item.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedServiceType = type;
+    }
+
+    function selectDate(el, date) {
+      document.querySelectorAll('#date-selector .time-option').forEach(item => item.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedDate = date;
+    }
+
+    function selectTimeSlot(el, time) {
+      document.querySelectorAll('.time-slot').forEach(item => item.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedTimeSlot = time;
+    }
+
+    function selectPriceChip(el, price) {
+      document.querySelectorAll('.price-chip').forEach(item => item.classList.remove('selected'));
+      el.classList.add('selected');
+      document.getElementById('total-price').textContent = `¥${price}`;
+      document.getElementById('service-budget').value = price;
+    }
+
+    function showConfirmModal() {
+      const service = services[selectedServiceType];
+      const pet = pets.find(p => p.id === selectedPetId);
+      const address = document.getElementById('service-address').value;
+      const budget = document.getElementById('service-budget').value;
+      const dateLabel = selectedDate === 'today' ? '今天' : selectedDate === 'tomorrow' ? '明天' : '周末';
+
+      const modalBody = document.getElementById('modal-confirm-body');
+      modalBody.innerHTML = `
+        <div class="confirm-service">
+          <div class="confirm-service-icon">${service.icon}</div>
+          <div class="confirm-service-info">
+            <h4>${service.name}服务</h4>
+            <p>${pet ? pet.name + ' · ' + pet.breed : '未选择'}</p>
+          </div>
+        </div>
+        <div class="confirm-detail"><span>服务日期</span><span>${dateLabel}</span></div>
+        <div class="confirm-detail"><span>服务时间</span><span>${selectedTimeSlot}</span></div>
+        <div class="confirm-detail"><span>服务地址</span><span>${address}</span></div>
+        <div class="confirm-detail"><span>服务费用</span><span>¥${budget}</span></div>
+        ${selectedHelper ? `<div class="confirm-detail"><span>指定帮手</span><span>${selectedHelper.name}</span></div>` : ''}
+        <div class="confirm-price">
+          <span>实付金额</span>
+          <span>¥${budget}</span>
+        </div>
+      `;
+
+      showModal('modal-confirm');
+    }
+
+    function confirmPublish() {
+      closeModal();
+      const budget = document.getElementById('service-budget').value;
+      const dateLabel = selectedDate === 'today' ? '今天' : selectedDate === 'tomorrow' ? '明天' : '周末';
+      const address = document.getElementById('service-address').value;
+
+      const newOrder = {
+        id: `202604${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+        status: 'matched',
+        service: selectedServiceType,
+        petId: selectedPetId,
+        helperId: helpers[0].id,
+        date: dateLabel,
+        time: selectedTimeSlot,
+        address: address,
+        price: parseInt(budget),
+        progress: 1
+      };
+
+      orders.unshift(newOrder);
+      showToast('需求发布成功！帮手已匹配', 'success');
+
+      setTimeout(() => {
+        showOrderDetail(newOrder.id);
+      }, 1500);
+    }
+
+    // ==================== ORDERS PAGE ====================
+    function renderOrdersPage() {
+      let filtered = [...orders];
+      if (currentOrderFilter === 'ongoing') {
+        filtered = filtered.filter(o => o.status === 'ongoing' || o.status === 'matched' || o.status === 'pending');
+      } else if (currentOrderFilter === 'completed') {
+        filtered = filtered.filter(o => o.status === 'completed');
+      }
+
+      const listEl = document.getElementById('orders-list');
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <h3 class="empty-title">暂无订单</h3>
+            <p class="empty-desc">点击首页按钮发布需求</p>
+            <button class="btn btn-primary btn-sm" onclick="switchTab(0)">去发布</button>
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map((order, i) => {
+        const service = services[order.service];
+        const helper = helpers.find(h => h.id === order.helperId);
+        const pet = pets.find(p => p.id === order.petId);
+        const statusMap = {
+          pending: { text: '待接单', color: 'orange' },
+          matched: { text: '已匹配', color: 'info' },
+          ongoing: { text: '服务中', color: 'primary' },
+          completed: { text: '已完成', color: 'success' }
+        };
+        const status = statusMap[order.status] || statusMap.pending;
+
+        return `
+          <div class="card animate-in delay-${i + 1}" onclick="showOrderDetail('${order.id}')" style="cursor: pointer;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 24px;">${service.icon}</span>
+                <div>
+                  <h4 style="font-size: 14px; font-weight: 600; color: var(--text);">${service.name}服务</h4>
+                  <p style="font-size: 11px; color: var(--text-muted);">${order.date} ${order.time}</p>
+                </div>
+              </div>
+              <span class="tag tag-${status.color}">${status.text}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="avatar" style="width: 28px; height: 28px; font-size: 12px;">${helper ? helper.avatar : '?'}</div>
+                <span style="font-size: 12px; color: var(--text-light);">${helper ? helper.name : '待匹配'}</span>
+              </div>
+              <span style="font-size: 16px; font-weight: 700; color: var(--primary); font-family: 'Quicksand', sans-serif;">¥${order.price}</span>
+            </div>
+            ${order.status === 'completed' && order.rating ? `
+              <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 4px;">
+                <span style="color: var(--accent); font-size: 14px;">${'★'.repeat(order.rating)}</span>
+                <span style="font-size: 12px; color: var(--text-muted);">已评价</span>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function switchOrderFilter(filter, el) {
+      currentOrderFilter = filter;
+      document.querySelectorAll('.order-filter-btn').forEach(btn => btn.classList.remove('active'));
+      el.classList.add('active');
+      renderOrdersPage();
+    }
+
+    // ==================== ORDER DETAIL MODAL ====================
+    function showOrderDetail(orderId) {
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return;
+
+      currentOrderId = orderId;
+      const service = services[order.service];
+      const helper = helpers.find(h => h.id === order.helperId);
+      const pet = pets.find(p => p.id === order.petId);
+
+      const statusMap = {
+        pending: { text: '待接单', color: 'var(--warning)' },
+        matched: { text: '已匹配帮手', color: 'var(--info)' },
+        ongoing: { text: '服务进行中', color: 'var(--primary)' },
+        completed: { text: '服务已完成', color: 'var(--success)' }
+      };
+      const status = statusMap[order.status] || statusMap.pending;
+
+      const timelineSteps = [
+        { title: '已发布需求', done: true },
+        { title: '已匹配帮手', done: order.status !== 'pending' },
+        { title: '帮手已到达', done: order.progress >= 1 },
+        { title: '服务进行中', done: order.progress >= 2 },
+        { title: '服务完成', done: order.status === 'completed' }
+      ];
+
+      const modalBody = document.getElementById('modal-order-detail-body');
+      modalBody.innerHTML = `
+        <div style="text-align: center; padding: 16px 0; border-bottom: 1px solid var(--border); margin-bottom: 16px;">
+          <div style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: ${status.color}15; border-radius: 20px;">
+            <div style="width: 10px; height: 10px; border-radius: 50%; background: ${status.color};"></div>
+            <span style="font-size: 14px; font-weight: 600; color: ${status.color};">${status.text}</span>
+          </div>
+        </div>
+
+        ${helper ? `
+        <div style="display: flex; gap: 14px; padding: 16px; background: var(--bg-secondary); border-radius: var(--radius-sm); margin-bottom: 16px;">
+          <div class="avatar lg" style="background: linear-gradient(135deg, var(--primary-light), var(--primary));">${helper.avatar}</div>
+          <div style="flex: 1;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+              <span style="font-size: 16px; font-weight: 600; color: var(--text);">${helper.name}</span>
+              <span class="tag tag-success">已认证</span>
+            </div>
+            <p style="font-size: 12px; color: var(--text-light); margin-bottom: 6px;">${helper.services[0]} · ${helper.community}</p>
+            <div class="rating">
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span class="rating-value">${helper.rating}</span>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div onclick="showToast('正在拨打...')" style="width: 44px; height: 44px; background: var(--success-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px;">📞</div>
+            <div onclick="showToast('正在跳转...')" style="width: 44px; height: 44px; background: var(--info-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px;">💬</div>
+          </div>
+        </div>
+        ` : ''}
+
+        <div class="map-container" style="height: 120px; margin-bottom: 16px;">
+          <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+            <div style="width: 40px; height: 40px; background: rgba(244,162,97,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+              <div style="width: 16px; height: 16px; background: var(--accent); border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(244,162,97,0.5);"></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 12px;">服务进度</h4>
+          <div class="timeline">
+            ${timelineSteps.map((step, i) => `
+              <div class="timeline-item">
+                <div class="timeline-dot ${step.done ? 'done' : 'pending'}">${step.done && i < timelineSteps.length - 1 ? '✓' : i === timelineSteps.length - 1 && step.done ? '✓' : ''}</div>
+                <div class="timeline-content">
+                  <div class="timeline-title">${step.title}</div>
+                  <div class="timeline-time">${step.done && i === 0 ? order.date + ' ' + order.time.split('-')[0] : step.done ? '已完成' : '待进行'}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div style="background: var(--bg-secondary); border-radius: var(--radius-sm); padding: 16px;">
+          <div class="info-row" style="border: none; padding: 6px 0;"><span class="info-label">服务类型</span><span class="info-value">${service.icon} ${service.name}</span></div>
+          <div class="info-row" style="border: none; padding: 6px 0;"><span class="info-label">服务宠物</span><span class="info-value">${pet ? pet.icon + ' ' + pet.name : '未知'}</span></div>
+          <div class="info-row" style="border: none; padding: 6px 0;"><span class="info-label">服务时间</span><span class="info-value">${order.date} ${order.time}</span></div>
+          <div class="info-row" style="border: none; padding: 6px 0;"><span class="info-label">服务地址</span><span class="info-value">${order.address}</span></div>
+          <div class="info-row" style="border: none; padding: 6px 0; padding-top: 10px; margin-top: 6px; border-top: 1px solid var(--border);"><span class="info-label">订单金额</span><span class="info-value primary" style="font-size: 18px;">¥${order.price}</span></div>
+        </div>
+
+        ${order.proofPhotos && order.proofPhotos.length > 0 ? `
+        <div style="margin-top: 16px;">
+          <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 10px;">📸 服务凭证</h4>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            ${order.proofPhotos.map(photo => `
+              <div onclick="showToast('查看大图')" style="width: 80px; height: 80px; border-radius: 10px; overflow: hidden; cursor: pointer; position: relative;">
+                <img src="${photo}" style="width: 100%; height: 100%; object-fit: cover;">
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        ` : ''}
+
+        ${order.status === 'ongoing' ? `
+          <div style="display: flex; gap: 12px; margin-top: 20px;">
+            <button class="btn btn-secondary" style="flex:1;" onclick="showToast('正在联系...')">📞 联系帮手</button>
+            <button class="btn btn-primary" style="flex:1;" onclick="showCompleteModal()">确认完成</button>
+          </div>
+        ` : order.status === 'completed' && !order.rating ? `
+          <button class="btn btn-primary btn-block" style="margin-top: 20px;" onclick="showCompleteModal()">立即评价</button>
+        ` : order.status === 'completed' && order.rating ? `
+          <div style="text-align: center; padding: 20px; margin-top: 16px; background: var(--success-bg); border-radius: var(--radius-sm);">
+            <div style="font-size: 14px; color: var(--text-light); margin-bottom: 8px;">已评价</div>
+            <div style="font-size: 28px; color: var(--accent);">${'★'.repeat(order.rating)}</div>
+          </div>
+        ` : ''}
+      `;
+
+      showModal('modal-order-detail');
+    }
+
+    // ==================== COMPLETE MODAL ====================
+    function showCompleteModal() {
+      selectedRating = 0;
+      selectedTip = 0;
+      document.querySelectorAll('.rating-star').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.tip-option').forEach(t => t.classList.remove('selected'));
+      document.getElementById('rating-label').textContent = '点击评分';
+      document.getElementById('review-text').value = '';
+      closeModal();
+      setTimeout(() => showModal('modal-complete'), 300);
+    }
+
+    function setRating(rating) {
+      selectedRating = rating;
+      document.querySelectorAll('.rating-star').forEach((s, i) => s.classList.toggle('active', i < rating));
+      const labels = ['', '很差', '较差', '一般', '满意', '非常满意'];
+      document.getElementById('rating-label').textContent = labels[rating];
+    }
+
+    function selectTip(el, amount) {
+      document.querySelectorAll('.tip-option').forEach(t => t.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedTip = amount;
+    }
+
+    function submitCompletion() {
+      if (selectedRating === 0) {
+        showToast('请先评分', 'warning');
+        return;
+      }
+
+      const order = orders.find(o => o.id === currentOrderId);
+      if (order) {
+        order.status = 'completed';
+        order.rating = selectedRating;
+      }
+
+      closeModal();
+      showToast('评价成功！', 'success');
+      renderOrdersPage();
+      updateMyStats();
+    }
+
+    // ==================== MY PAGE ====================
+    function switchRole(role, el) {
+      currentRole = role;
+      document.querySelectorAll('.role-option').forEach(o => o.classList.remove('active'));
+      el.classList.add('active');
+
+      if (role === 'owner') {
+        document.getElementById('owner-content').style.display = 'block';
+        document.getElementById('helper-content').style.display = 'none';
+      } else {
+        document.getElementById('owner-content').style.display = 'none';
+        document.getElementById('helper-content').style.display = 'block';
+        renderHelperOrders();
+      }
+    }
+
+    function updateMyStats() {
+      document.getElementById('stat-orders').textContent = orders.length;
+      document.getElementById('stat-pets').textContent = pets.length;
+      document.getElementById('pet-count-badge').textContent = pets.length;
+    }
+
+    function renderHelperOrders() {
+      const listEl = document.getElementById('helper-orders-list');
+
+      if (helperRequests.length === 0) {
+        listEl.innerHTML = `
+          <div class="empty-state" style="padding: 32px 16px;">
+            <div class="empty-icon" style="width: 70px; height: 70px; font-size: 32px; margin-bottom: 16px;">📋</div>
+            <h3 class="empty-title" style="font-size: 14px;">暂无可接订单</h3>
+            <p class="empty-desc" style="font-size: 12px;">暂无新的服务请求</p>
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = helperRequests.map(req => `
+        <div class="service-request-card ${req.urgent ? 'urgent' : ''}">
+          <div class="service-request-header">
+            <div class="service-request-type">
+              <span>${req.petType}</span>
+              <div>
+                <h4>${services[req.service].name}服务</h4>
+                <p>${req.petName} · ${req.ownerName}</p>
+              </div>
+            </div>
+            ${req.urgent ? '<span class="tag tag-danger">紧急</span>' : ''}
+          </div>
+          <div class="service-request-meta">
+            <span>📍 ${req.community}</span>
+            <span>📅 ${req.date} ${req.time}</span>
+          </div>
+          <div class="service-request-footer">
+            <span class="service-request-price">¥${req.price}</span>
+            <div class="service-request-actions">
+              <button class="btn btn-sm btn-secondary" onclick="rejectRequest('${req.id}')">拒绝</button>
+              <button class="btn btn-sm btn-primary" onclick="acceptRequest('${req.id}')">接单</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function acceptRequest(reqId) {
+      helperRequests = helperRequests.filter(r => r.id !== reqId);
+      showToast('接单成功！', 'success');
+      renderHelperOrders();
+    }
+
+    function rejectRequest(reqId) {
+      helperRequests = helperRequests.filter(r => r.id !== reqId);
+      showToast('已拒绝');
+      renderHelperOrders();
+    }
+
+    // ==================== PETS ====================
+    function showPetsModal() {
+      const modalBody = document.getElementById('modal-pets-body');
+      modalBody.innerHTML = pets.map(pet => `
+        <div style="display: flex; gap: 14px; align-items: center; padding: 14px; background: var(--bg-secondary); border-radius: var(--radius-sm); margin-bottom: 12px;">
+          <div style="width: 56px; height: 56px; background: ${pet.type === 'dog' ? '#FEF3E6' : pet.type === 'cat' ? '#E8F5E9' : '#F3E5F5'}; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 28px;">${pet.icon}</div>
+          <div style="flex: 1;">
+            <h4 style="font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 2px;">${pet.name}</h4>
+            <p style="font-size: 12px; color: var(--text-light);">${pet.breed} · ${pet.age}</p>
+            ${pet.note !== '无' ? `<span class="tag tag-warning" style="margin-top: 6px; font-size: 10px;">${pet.note}</span>` : ''}
+          </div>
+          <div onclick="showToast('编辑宠物')" style="cursor: pointer; color: var(--text-muted); font-size: 18px;">✏️</div>
+        </div>
+      `).join('') + `
+        <button class="btn btn-outline btn-block" onclick="closeModal(); showAddPetModal();" style="margin-top: 8px;">+ 添加新宠物</button>
+      `;
+      showModal('modal-pets');
+    }
+
+    function showAddPetModal() {
+      document.getElementById('new-pet-name').value = '';
+      document.getElementById('new-pet-breed').value = '';
+      document.getElementById('new-pet-age').value = '';
+      document.getElementById('new-pet-note').value = '';
+      document.querySelectorAll('.pet-type-item').forEach(i => i.classList.remove('selected'));
+      document.querySelector('.pet-type-item[data-type="dog"]').classList.add('selected');
+      showModal('modal-add-pet');
+    }
+
+    function selectPetType(el, icon) {
+      document.querySelectorAll('.pet-type-item').forEach(i => i.classList.remove('selected'));
+      el.classList.add('selected');
+      newPetIcon = icon;
+    }
+
+    function addNewPet() {
+      const name = document.getElementById('new-pet-name').value;
+      if (!name) {
+        showToast('请输入宠物昵称', 'warning');
+        return;
+      }
+
+      const breed = document.getElementById('new-pet-breed').value || '宠物';
+      const age = document.getElementById('new-pet-age').value || '1岁';
+      const note = document.getElementById('new-pet-note').value || '无';
+
+      const newPet = {
+        id: pets.length + 1,
+        name, type: newPetIcon === '🐕' ? 'dog' : newPetIcon === '🐱' ? 'cat' : 'other',
+        breed, age, icon: newPetIcon, note
+      };
+      pets.push(newPet);
+
+      closeModal();
+      showToast(`${name} 已添加`, 'success');
+      renderPetSelector();
+      updateMyStats();
+    }
+
+    // ==================== EMERGENCY ====================
+    function showEmergencyModal() {
+      document.getElementById('emergency-desc').value = '';
+      showModal('modal-emergency');
+    }
+
+    function submitEmergency() {
+      const desc = document.getElementById('emergency-desc').value;
+      if (!desc) {
+        showToast('请描述紧急情况', 'warning');
+        return;
+      }
+      closeModal();
+      showToast('已通知附近帮手，求助信息发送中...', 'success');
+    }
+
+    // ==================== MODAL ====================
+    function showModal(modalId) {
+      document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+      document.getElementById(modalId).style.display = 'block';
+      document.getElementById('modal-overlay').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('modal-overlay').classList.remove('show');
+    }
+
+    document.getElementById('modal-overlay').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    // ==================== TOGGLE SLOTS ====================
+    function toggleTimeSlot(el) {
+      if (el.style.background === 'rgb(241, 245, 237)' || el.style.background === 'var(--primary-bg)') {
+        el.style.background = 'var(--bg-secondary)';
+        el.style.borderColor = 'transparent';
+        el.style.querySelector ? null : (el.children[0].style.color = 'var(--text)');
+        el.querySelector && el.querySelector('div') && (el.querySelector('div').style.color = 'var(--text)');
+      } else {
+        el.style.background = 'var(--primary-bg)';
+        el.style.borderColor = 'var(--primary)';
+        el.querySelector && el.querySelector('div') && (el.querySelector('div').style.color = 'var(--primary-dark)');
+      }
+    }
+
+    // ==================== TOAST ====================
+    function showToast(message, type = '') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast ' + type;
+      setTimeout(() => toast.classList.add('show'), 10);
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    // ==================== INIT ====================
+    renderHomePage();
+    renderPetSelector();
+    renderHelpers();
+    renderOrdersPage();
+  </script>
+</body>
+</html>
